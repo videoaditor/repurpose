@@ -26,19 +26,27 @@ const EMPTY_CAPTIONS: CaptionData = {
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
+function isYouTubeUrl(url: string): boolean {
+  return /youtube\.com|youtu\.be/.test(url);
+}
+
+function extractYouTubeVideoId(url: string): string | null {
+  const m = url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
 export default function PostPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [step, setStep] = useState<Step>(1);
 
-  // Form state
   const [accountId, setAccountId] = useState<number | null>(null);
   const [videoUrl, setVideoUrl] = useState('');
+  const [youtubeChannelUrl, setYoutubeChannelUrl] = useState('');
   const [title, setTitle] = useState('');
   const [baseDescription, setBaseDescription] = useState('');
   const [captions, setCaptions] = useState<CaptionData>(EMPTY_CAPTIONS);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
 
-  // UI state
   const [generatingCaptions, setGeneratingCaptions] = useState(false);
   const [posting, setPosting] = useState(false);
   const [postStatuses, setPostStatuses] = useState<PlatformStatus[]>([]);
@@ -53,6 +61,7 @@ export default function PostPage() {
   }, []);
 
   const selectedAccount = accounts.find((a) => a.id === accountId);
+  const isYouTube = isYouTubeUrl(videoUrl);
 
   function togglePlatform(p: string) {
     setSelectedPlatforms((prev) =>
@@ -67,14 +76,27 @@ export default function PostPage() {
     }
     setError('');
     setGeneratingCaptions(true);
+
+    // Extract YouTube video ID if available for context
+    const ytVideoId = youtubeChannelUrl ? extractYouTubeVideoId(youtubeChannelUrl) : null;
+
     try {
       const res = await fetch('/api/captions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description: baseDescription }),
+        body: JSON.stringify({
+          title,
+          description: baseDescription,
+          isYouTube: isYouTube || !!youtubeChannelUrl,
+          youtubeVideoId: ytVideoId,
+        }),
       });
       if (!res.ok) throw new Error();
       const data = await res.json();
+
+      // If YouTube channel URL was provided and no title set, use generated title
+      if (data.youtube_title && !title) setTitle(data.youtube_title);
+
       setCaptions(data);
       setStep(3);
     } catch {
@@ -98,7 +120,6 @@ export default function PostPage() {
     setPosting(true);
     setDone(false);
 
-    // Show pending statuses
     const initialStatuses: PlatformStatus[] = selectedPlatforms.map((p) => ({
       platform: p,
       status: 'posting',
@@ -121,7 +142,6 @@ export default function PostPage() {
       });
 
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error ?? 'Failed to post');
 
       setPostStatuses(
@@ -149,6 +169,7 @@ export default function PostPage() {
     setStep(1);
     setAccountId(null);
     setVideoUrl('');
+    setYoutubeChannelUrl('');
     setTitle('');
     setBaseDescription('');
     setCaptions(EMPTY_CAPTIONS);
@@ -166,56 +187,87 @@ export default function PostPage() {
     5: 'Publishing',
   };
 
+  const inputStyle = {
+    background: '#0d0d0d',
+    border: '1px solid #1e1e1e',
+    borderRadius: '10px',
+    padding: '10px 12px',
+    fontSize: '13px',
+    color: '#f5f5f5',
+    width: '100%',
+    outline: 'none',
+    transition: 'border-color 150ms ease',
+  };
+
   return (
     <div className="p-8 max-w-2xl mx-auto animate-fade-in">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="font-display text-2xl font-bold text-white tracking-tight">New Post</h1>
-        <p className="text-sm text-[#555] mt-0.5">Distribute your content across platforms</p>
+        <h1 className="font-display text-[22px] font-bold tracking-tight" style={{ color: '#f5f5f5' }}>
+          New Post
+        </h1>
+        <p className="text-sm mt-0.5" style={{ color: '#6b6b6b' }}>
+          Distribute your content across platforms
+        </p>
       </div>
 
       {/* Step indicator */}
       {!done && (
-        <div className="flex items-center gap-2 mb-8">
+        <div className="flex items-center gap-1.5 mb-8">
           {([1, 2, 3, 4, 5] as Step[]).map((s, i) => (
-            <div key={s} className="flex items-center gap-2">
+            <div key={s} className="flex items-center gap-1.5">
               <div
-                className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold transition-all duration-200 ${
+                className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold transition-all duration-200"
+                style={
                   step === s
-                    ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
+                    ? { background: '#a78bfa', color: '#fff', boxShadow: '0 0 12px rgba(167,139,250,0.3)' }
                     : step > s
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                    : 'bg-[#1a1a1a] text-[#555] border border-[#1e1e1e]'
-                }`}
+                    ? { background: 'rgba(52,211,153,0.12)', color: '#34d399', border: '1px solid rgba(52,211,153,0.2)' }
+                    : { background: '#181818', color: '#4a4a4a', border: '1px solid #1e1e1e' }
+                }
               >
                 {step > s ? '✓' : s}
               </div>
-              {i < 4 && <div className={`flex-1 h-px ${step > s ? 'bg-emerald-500/30' : 'bg-[#1e1e1e]'}`} style={{ width: '24px' }} />}
+              {i < 4 && (
+                <div
+                  className="h-px"
+                  style={{
+                    width: '20px',
+                    background: step > s ? 'rgba(52,211,153,0.25)' : '#1e1e1e',
+                  }}
+                />
+              )}
             </div>
           ))}
-          <span className="ml-2 text-xs text-[#555]">{stepLabels[step]}</span>
+          <span className="ml-2 text-xs" style={{ color: '#4a4a4a' }}>{stepLabels[step]}</span>
         </div>
       )}
 
       {error && (
-        <div className="mb-4 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
+        <div
+          className="mb-4 text-xs rounded-[10px] px-4 py-3"
+          style={{ color: '#ef4444', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)' }}
+        >
           {error}
         </div>
       )}
 
       {/* Step 1: Select account */}
       {step === 1 && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {accounts.length === 0 ? (
-            <div className="bg-[#111] border border-[#1e1e1e] border-dashed rounded-xl p-8 text-center">
-              <p className="text-[#555] text-sm mb-2">No accounts connected yet.</p>
-              <a href="/accounts" className="text-indigo-400 text-sm hover:text-indigo-300 transition-colors">
+            <div
+              className="rounded-[14px] p-8 text-center"
+              style={{ background: '#111111', border: '1px dashed #1e1e1e' }}
+            >
+              <p className="text-sm mb-2" style={{ color: '#4a4a4a' }}>No accounts connected yet.</p>
+              <a href="/accounts" className="text-sm transition-colors" style={{ color: '#a78bfa' }}>
                 Add an account →
               </a>
             </div>
           ) : (
             <>
-              <p className="text-sm text-[#888]">Choose which account to post from:</p>
+              <p className="text-sm" style={{ color: '#6b6b6b' }}>Choose which account to post from:</p>
               <div className="space-y-2">
                 {accounts.map((account) => (
                   <button
@@ -224,20 +276,20 @@ export default function PostPage() {
                       setAccountId(account.id);
                       setSelectedPlatforms(account.platforms as string[]);
                     }}
-                    className={`w-full flex items-center gap-4 p-4 rounded-xl border text-left transition-all duration-150 ${
-                      accountId === account.id
-                        ? 'border-indigo-500/50 bg-indigo-500/5 shadow-lg shadow-indigo-500/5'
-                        : 'border-[#1e1e1e] bg-[#111] hover:border-[#2a2a2a]'
-                    }`}
+                    className="w-full flex items-center gap-4 p-4 rounded-[14px] text-left transition-all duration-150"
+                    style={{
+                      background: accountId === account.id ? 'rgba(167,139,250,0.05)' : '#111111',
+                      border: `1px solid ${accountId === account.id ? 'rgba(167,139,250,0.2)' : '#1e1e1e'}`,
+                    }}
                   >
                     <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold font-display text-white flex-shrink-0"
-                      style={{ backgroundColor: account.color, boxShadow: `0 4px 14px ${account.color}30` }}
+                      className="w-9 h-9 rounded-[10px] flex items-center justify-center text-sm font-bold font-display text-white flex-shrink-0"
+                      style={{ backgroundColor: account.color, boxShadow: `0 4px 12px ${account.color}30` }}
                     >
                       {account.name.slice(0, 2).toUpperCase()}
                     </div>
                     <div className="flex-1">
-                      <div className="font-medium text-white text-sm">{account.name}</div>
+                      <div className="font-medium text-sm" style={{ color: '#f5f5f5' }}>{account.name}</div>
                       <div className="flex flex-wrap gap-1 mt-1.5">
                         {(account.platforms as string[]).map((p) => (
                           <PlatformBadge key={p} platform={p} size="sm" />
@@ -245,7 +297,10 @@ export default function PostPage() {
                       </div>
                     </div>
                     {accountId === account.id && (
-                      <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center flex-shrink-0">
+                      <div
+                        className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ background: '#a78bfa' }}
+                      >
                         <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                           <path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
@@ -257,7 +312,13 @@ export default function PostPage() {
               <button
                 onClick={() => accountId && setStep(2)}
                 disabled={!accountId}
-                className="w-full py-2.5 bg-indigo-500 hover:bg-indigo-400 disabled:opacity-30 disabled:cursor-not-allowed text-white text-sm font-medium rounded-xl transition-colors"
+                className="w-full py-2.5 text-sm font-medium rounded-[10px] transition-all duration-150"
+                style={{
+                  background: accountId ? 'rgba(167,139,250,0.12)' : '#141414',
+                  color: accountId ? '#a78bfa' : '#333',
+                  border: `1px solid ${accountId ? 'rgba(167,139,250,0.2)' : '#1e1e1e'}`,
+                  cursor: accountId ? 'pointer' : 'not-allowed',
+                }}
               >
                 Continue →
               </button>
@@ -269,38 +330,71 @@ export default function PostPage() {
       {/* Step 2: Video details */}
       {step === 2 && (
         <div className="space-y-4">
-          <div className="bg-[#111] border border-[#1e1e1e] rounded-xl p-5 space-y-4">
+          <div
+            className="rounded-[14px] p-5 space-y-4"
+            style={{ background: '#111111', border: '1px solid #1e1e1e' }}
+          >
             <div>
-              <label className="block text-xs text-[#888] mb-1.5 font-medium">Video URL</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: '#6b6b6b' }}>Video URL</label>
               <input
                 type="url"
                 value={videoUrl}
                 onChange={(e) => setVideoUrl(e.target.value)}
                 placeholder="https://..."
-                className="w-full bg-[#0f0f0f] border border-[#1e1e1e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#444] focus:outline-none focus:border-indigo-500/50 transition-colors"
+                style={inputStyle}
+                onFocus={(e) => { (e.target as HTMLInputElement).style.borderColor = 'rgba(167,139,250,0.4)'; }}
+                onBlur={(e) => { (e.target as HTMLInputElement).style.borderColor = '#1e1e1e'; }}
               />
             </div>
+
+            {/* YouTube Channel URL — optional */}
             <div>
-              <label className="block text-xs text-[#888] mb-1.5 font-medium">Title</label>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: '#6b6b6b' }}>
+                YouTube Channel / Video URL{' '}
+                <span className="font-normal" style={{ color: '#4a4a4a' }}>(optional — improves AI captions)</span>
+              </label>
+              <input
+                type="url"
+                value={youtubeChannelUrl}
+                onChange={(e) => setYoutubeChannelUrl(e.target.value)}
+                placeholder="https://youtube.com/watch?v=... or channel URL"
+                style={inputStyle}
+                onFocus={(e) => { (e.target as HTMLInputElement).style.borderColor = 'rgba(167,139,250,0.4)'; }}
+                onBlur={(e) => { (e.target as HTMLInputElement).style.borderColor = '#1e1e1e'; }}
+              />
+              {youtubeChannelUrl && (
+                <p className="text-[11px] mt-1.5" style={{ color: '#34d399' }}>
+                  ✓ YouTube context detected — AI will generate YouTube-optimized captions
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: '#6b6b6b' }}>Title</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="My amazing video"
-                className="w-full bg-[#0f0f0f] border border-[#1e1e1e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#444] focus:outline-none focus:border-indigo-500/50 transition-colors"
+                style={inputStyle}
+                onFocus={(e) => { (e.target as HTMLInputElement).style.borderColor = 'rgba(167,139,250,0.4)'; }}
+                onBlur={(e) => { (e.target as HTMLInputElement).style.borderColor = '#1e1e1e'; }}
               />
             </div>
+
             <div>
-              <label className="block text-xs text-[#888] mb-1.5 font-medium">
+              <label className="block text-xs font-medium mb-1.5" style={{ color: '#6b6b6b' }}>
                 Base Description{' '}
-                <span className="text-[#555] font-normal">(optional, helps AI generate better captions)</span>
+                <span className="font-normal" style={{ color: '#4a4a4a' }}>(optional)</span>
               </label>
               <textarea
                 value={baseDescription}
                 onChange={(e) => setBaseDescription(e.target.value)}
                 placeholder="What's this video about?"
                 rows={3}
-                className="w-full bg-[#0f0f0f] border border-[#1e1e1e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#444] focus:outline-none focus:border-indigo-500/50 transition-colors resize-none"
+                style={{ ...inputStyle, resize: 'none' }}
+                onFocus={(e) => { (e.target as HTMLTextAreaElement).style.borderColor = 'rgba(167,139,250,0.4)'; }}
+                onBlur={(e) => { (e.target as HTMLTextAreaElement).style.borderColor = '#1e1e1e'; }}
               />
             </div>
           </div>
@@ -308,18 +402,28 @@ export default function PostPage() {
           <div className="flex gap-3">
             <button
               onClick={() => setStep(1)}
-              className="px-4 py-2.5 border border-[#1e1e1e] text-[#888] text-sm font-medium rounded-xl hover:border-[#2a2a2a] hover:text-white transition-all"
+              className="px-4 py-2.5 text-sm font-medium rounded-[10px] transition-all"
+              style={{ border: '1px solid #1e1e1e', color: '#6b6b6b', background: 'transparent' }}
             >
               ← Back
             </button>
             <button
               onClick={handleGenerateCaptions}
               disabled={!videoUrl || !title || generatingCaptions}
-              className="flex-1 py-2.5 bg-indigo-500 hover:bg-indigo-400 disabled:opacity-30 disabled:cursor-not-allowed text-white text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 text-sm font-medium rounded-[10px] transition-all flex items-center justify-center gap-2"
+              style={{
+                background: (!videoUrl || !title || generatingCaptions) ? '#141414' : 'rgba(167,139,250,0.12)',
+                color: (!videoUrl || !title || generatingCaptions) ? '#333' : '#a78bfa',
+                border: `1px solid ${(!videoUrl || !title || generatingCaptions) ? '#1e1e1e' : 'rgba(167,139,250,0.2)'}`,
+                cursor: (!videoUrl || !title || generatingCaptions) ? 'not-allowed' : 'pointer',
+              }}
             >
               {generatingCaptions ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div
+                    className="w-3.5 h-3.5 rounded-full border-2 border-t-transparent animate-spin"
+                    style={{ borderColor: '#a78bfa', borderTopColor: 'transparent' }}
+                  />
                   Generating with AI...
                 </>
               ) : (
@@ -333,18 +437,20 @@ export default function PostPage() {
       {/* Step 3: Edit captions */}
       {step === 3 && (
         <div className="space-y-4">
-          <p className="text-sm text-[#888]">Review and edit your AI-generated captions:</p>
+          <p className="text-sm" style={{ color: '#6b6b6b' }}>Review and edit AI-generated captions:</p>
           <CaptionEditor captions={captions} onChange={setCaptions} />
           <div className="flex gap-3">
             <button
               onClick={() => setStep(2)}
-              className="px-4 py-2.5 border border-[#1e1e1e] text-[#888] text-sm font-medium rounded-xl hover:border-[#2a2a2a] hover:text-white transition-all"
+              className="px-4 py-2.5 text-sm font-medium rounded-[10px] transition-all"
+              style={{ border: '1px solid #1e1e1e', color: '#6b6b6b', background: 'transparent' }}
             >
               ← Back
             </button>
             <button
               onClick={() => setStep(4)}
-              className="flex-1 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white text-sm font-medium rounded-xl transition-colors"
+              className="flex-1 py-2.5 text-sm font-medium rounded-[10px] transition-all"
+              style={{ background: 'rgba(167,139,250,0.12)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.2)' }}
             >
               Choose Platforms →
             </button>
@@ -355,56 +461,66 @@ export default function PostPage() {
       {/* Step 4: Platform selection */}
       {step === 4 && (
         <div className="space-y-4">
-          <p className="text-sm text-[#888]">Choose which platforms to post to:</p>
+          <p className="text-sm" style={{ color: '#6b6b6b' }}>Choose which platforms to post to:</p>
 
-          <div className="bg-[#111] border border-[#1e1e1e] rounded-xl p-5">
-            <div className="space-y-2">
-              {(selectedAccount?.platforms ?? ALL_PLATFORMS).map((platform) => {
-                const checked = selectedPlatforms.includes(platform);
-                return (
-                  <label
-                    key={platform}
-                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-150 ${
-                      checked
-                        ? 'border-indigo-500/30 bg-indigo-500/5'
-                        : 'border-[#1a1a1a] hover:border-[#2a2a2a]'
-                    }`}
+          <div
+            className="rounded-[14px] p-4 space-y-2"
+            style={{ background: '#111111', border: '1px solid #1e1e1e' }}
+          >
+            {(selectedAccount?.platforms ?? ALL_PLATFORMS).map((platform) => {
+              const checked = selectedPlatforms.includes(platform);
+              return (
+                <label
+                  key={platform}
+                  className="flex items-center gap-3 p-3 rounded-[10px] cursor-pointer transition-all duration-150"
+                  style={{
+                    border: `1px solid ${checked ? 'rgba(167,139,250,0.2)' : '#181818'}`,
+                    background: checked ? 'rgba(167,139,250,0.04)' : 'transparent',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => togglePlatform(platform)}
+                    className="sr-only"
+                  />
+                  <div
+                    className="w-4 h-4 rounded flex items-center justify-center transition-all flex-shrink-0"
+                    style={{
+                      background: checked ? '#a78bfa' : 'transparent',
+                      border: `1px solid ${checked ? '#a78bfa' : '#2a2a2a'}`,
+                    }}
                   >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => togglePlatform(platform)}
-                      className="sr-only"
-                    />
-                    <div
-                      className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
-                        checked ? 'bg-indigo-500 border-indigo-500' : 'border-[#333]'
-                      }`}
-                    >
-                      {checked && (
-                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                          <path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      )}
-                    </div>
-                    <PlatformBadge platform={platform} />
-                  </label>
-                );
-              })}
-            </div>
+                    {checked && (
+                      <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                        <path d="M1.5 4.5l2 2 4-4" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </div>
+                  <PlatformBadge platform={platform} />
+                </label>
+              );
+            })}
           </div>
 
           <div className="flex gap-3">
             <button
               onClick={() => setStep(3)}
-              className="px-4 py-2.5 border border-[#1e1e1e] text-[#888] text-sm font-medium rounded-xl hover:border-[#2a2a2a] hover:text-white transition-all"
+              className="px-4 py-2.5 text-sm font-medium rounded-[10px] transition-all"
+              style={{ border: '1px solid #1e1e1e', color: '#6b6b6b', background: 'transparent' }}
             >
               ← Back
             </button>
             <button
               onClick={handlePost}
               disabled={selectedPlatforms.length === 0 || posting}
-              className="flex-1 py-2.5 bg-indigo-500 hover:bg-indigo-400 disabled:opacity-30 disabled:cursor-not-allowed text-white text-sm font-medium rounded-xl transition-colors"
+              className="flex-1 py-2.5 text-sm font-medium rounded-[10px] transition-all"
+              style={{
+                background: (selectedPlatforms.length === 0 || posting) ? '#141414' : 'rgba(167,139,250,0.12)',
+                color: (selectedPlatforms.length === 0 || posting) ? '#333' : '#a78bfa',
+                border: `1px solid ${(selectedPlatforms.length === 0 || posting) ? '#1e1e1e' : 'rgba(167,139,250,0.2)'}`,
+                cursor: (selectedPlatforms.length === 0 || posting) ? 'not-allowed' : 'pointer',
+              }}
             >
               Post to {selectedPlatforms.length} platform{selectedPlatforms.length !== 1 ? 's' : ''} →
             </button>
@@ -418,26 +534,34 @@ export default function PostPage() {
           <PostStatus statuses={postStatuses} />
 
           {done && (
-            <div className="bg-[#111] border border-[#1e1e1e] rounded-xl p-5 text-center">
-              <div className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto mb-3">
+            <div
+              className="rounded-[14px] p-6 text-center"
+              style={{ background: '#111111', border: '1px solid #1e1e1e' }}
+            >
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3"
+                style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.15)' }}
+              >
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <path d="M4 9l4 4 7-7" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M4 9l4 4 7-7" stroke="#34d399" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
-              <h3 className="font-display font-semibold text-white text-sm mb-1">
+              <h3 className="font-display font-semibold text-sm mb-1" style={{ color: '#f5f5f5' }}>
                 Posted successfully
               </h3>
-              <p className="text-xs text-[#555] mb-4">Your content has been distributed.</p>
+              <p className="text-xs mb-4" style={{ color: '#4a4a4a' }}>Your content has been distributed.</p>
               <div className="flex gap-3 justify-center">
                 <a
                   href="/history"
-                  className="px-4 py-2 border border-[#1e1e1e] text-[#888] text-sm rounded-xl hover:text-white hover:border-[#2a2a2a] transition-all"
+                  className="px-4 py-2 text-sm rounded-[10px] transition-all"
+                  style={{ border: '1px solid #1e1e1e', color: '#6b6b6b' }}
                 >
                   View History
                 </a>
                 <button
                   onClick={reset}
-                  className="px-4 py-2 bg-indigo-500 hover:bg-indigo-400 text-white text-sm rounded-xl transition-colors"
+                  className="px-4 py-2 text-sm rounded-[10px] transition-all"
+                  style={{ background: 'rgba(167,139,250,0.12)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.2)' }}
                 >
                   New Post
                 </button>

@@ -22,204 +22,276 @@ interface Post {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; color: string; bg: string }> = {
-    posted: { label: 'Posted', color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
-    scheduled: { label: 'Scheduled', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
-    failed: { label: 'Failed', color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
-    pending: { label: 'Pending', color: '#888', bg: 'rgba(136,136,136,0.1)' },
+    posted: { label: 'Posted', color: '#34d399', bg: 'rgba(52,211,153,0.08)' },
+    scheduled: { label: 'Scheduled', color: '#fb923c', bg: 'rgba(251,146,60,0.08)' },
+    failed: { label: 'Failed', color: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
+    pending: { label: 'Pending', color: '#6b6b6b', bg: 'rgba(107,107,107,0.08)' },
   };
   const cfg = map[status] ?? map.pending;
   return (
     <span
-      className="text-[11px] font-medium px-2 py-0.5 rounded-md border"
-      style={{ color: cfg.color, backgroundColor: cfg.bg, borderColor: `${cfg.color}30` }}
+      className="text-[10px] font-medium px-2 py-0.5 rounded-md border"
+      style={{ color: cfg.color, backgroundColor: cfg.bg, borderColor: `${cfg.color}25` }}
     >
       {cfg.label}
     </span>
   );
 }
 
+const ALL_PLATFORMS = ['tiktok', 'youtube', 'instagram', 'x', 'linkedin'];
+const ALL_STATUSES = ['posted', 'scheduled', 'failed', 'pending'];
+
 export default function HistoryPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [accountFilter, setAccountFilter] = useState<string>('all');
+  const [platformFilter, setPlatformFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       fetch('/api/accounts').then((r) => r.json()),
-      fetchPosts(),
-    ]).then(([accs]) => {
-      setAccounts(accs);
-    });
+      fetch('/api/history').then((r) => r.json()).catch(() => []),
+    ]).then(([accs, postsData]) => {
+      setAccounts(Array.isArray(accs) ? accs : []);
+      setPosts(Array.isArray(postsData) ? postsData : []);
+    }).finally(() => setLoading(false));
   }, []);
-
-  async function fetchPosts() {
-    try {
-      const res = await fetch('/api/history');
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setPosts(data);
-    } catch {
-      // fallback — fetch all posts via accounts
-      setPosts([]);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   const accountMap = Object.fromEntries(accounts.map((a) => [a.id, a]));
 
-  const filtered = accountFilter === 'all'
-    ? posts
-    : posts.filter((p) => p.account_id === parseInt(accountFilter));
+  const filtered = posts.filter((p) => {
+    if (accountFilter !== 'all' && p.account_id !== parseInt(accountFilter)) return false;
+    if (platformFilter !== 'all' && !(p.platforms as string[]).includes(platformFilter)) return false;
+    if (statusFilter !== 'all' && p.status !== statusFilter) return false;
+    return true;
+  });
+
+  const platformColors: Record<string, string> = {
+    tiktok: '#fe2c55',
+    youtube: '#ff0000',
+    instagram: '#c13584',
+    x: '#e7e7e7',
+    linkedin: '#0077b5',
+  };
 
   return (
     <div className="p-8 max-w-5xl mx-auto animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="font-display text-2xl font-bold text-white tracking-tight">Post History</h1>
-          <p className="text-sm text-[#555] mt-0.5">Track all published content</p>
+          <h1 className="font-display text-[22px] font-bold tracking-tight" style={{ color: '#f5f5f5' }}>
+            Post History
+          </h1>
+          <p className="text-sm mt-0.5" style={{ color: '#6b6b6b' }}>
+            Track all published content
+          </p>
         </div>
         <Link
           href="/post"
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-400 text-white text-sm font-medium rounded-xl transition-colors shadow-lg shadow-indigo-500/20"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-[10px] transition-all duration-150"
+          style={{
+            background: 'rgba(167,139,250,0.12)',
+            color: '#a78bfa',
+            border: '1px solid rgba(167,139,250,0.2)',
+          }}
         >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M6.5 1.5v10M1.5 6.5h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
           </svg>
           New Post
         </Link>
       </div>
 
-      {/* Filter */}
-      <div className="flex items-center gap-3 mb-5">
-        <label className="text-xs text-[#555] font-medium">Filter by account:</label>
+      {/* Filter row */}
+      <div className="flex items-center gap-3 mb-6 flex-wrap">
+        {/* Account selector */}
         <select
           value={accountFilter}
           onChange={(e) => setAccountFilter(e.target.value)}
-          className="bg-[#111] border border-[#1e1e1e] rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 transition-colors"
+          className="text-xs font-medium rounded-[8px] px-3 py-1.5 transition-colors"
+          style={{
+            background: '#111111',
+            border: '1px solid #1e1e1e',
+            color: '#f5f5f5',
+            outline: 'none',
+          }}
         >
           <option value="all">All accounts</option>
           {accounts.map((a) => (
             <option key={a.id} value={a.id}>{a.name}</option>
           ))}
         </select>
+
+        {/* Platform pills */}
+        <div className="flex items-center gap-1.5">
+          {['all', ...ALL_PLATFORMS].map((p) => (
+            <button
+              key={p}
+              onClick={() => setPlatformFilter(p)}
+              className="text-[11px] font-medium px-2.5 py-1 rounded-[6px] transition-all duration-150"
+              style={{
+                background: platformFilter === p
+                  ? p === 'all' ? 'rgba(167,139,250,0.12)' : `${platformColors[p]}15`
+                  : 'transparent',
+                color: platformFilter === p
+                  ? p === 'all' ? '#a78bfa' : platformColors[p]
+                  : '#4a4a4a',
+                border: `1px solid ${platformFilter === p
+                  ? p === 'all' ? 'rgba(167,139,250,0.2)' : `${platformColors[p]}30`
+                  : '#1a1a1a'}`,
+              }}
+            >
+              {p === 'all' ? 'All platforms' : p.charAt(0).toUpperCase() + p.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        {/* Status pills */}
+        <div className="flex items-center gap-1.5">
+          {['all', ...ALL_STATUSES].map((s) => {
+            const colors: Record<string, string> = {
+              all: '#a78bfa',
+              posted: '#34d399',
+              scheduled: '#fb923c',
+              failed: '#ef4444',
+              pending: '#6b6b6b',
+            };
+            return (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                className="text-[11px] font-medium px-2.5 py-1 rounded-[6px] transition-all duration-150"
+                style={{
+                  background: statusFilter === s ? `${colors[s]}12` : 'transparent',
+                  color: statusFilter === s ? colors[s] : '#4a4a4a',
+                  border: `1px solid ${statusFilter === s ? `${colors[s]}25` : '#1a1a1a'}`,
+                }}
+              >
+                {s === 'all' ? 'All status' : s.charAt(0).toUpperCase() + s.slice(1)}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="ml-auto text-xs" style={{ color: '#333' }}>
+          {filtered.length} post{filtered.length !== 1 ? 's' : ''}
+        </div>
       </div>
 
-      {/* Table */}
+      {/* Content */}
       {loading ? (
-        <div className="bg-[#111] border border-[#1e1e1e] rounded-xl overflow-hidden">
+        <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="border-b border-[#0f0f0f] px-5 py-4 animate-pulse">
-              <div className="h-4 bg-[#1a1a1a] rounded w-48 mb-2" />
-              <div className="h-3 bg-[#161616] rounded w-32" />
-            </div>
+            <div
+              key={i}
+              className="rounded-[14px] p-5 shimmer"
+              style={{ height: '88px', border: '1px solid #1a1a1a' }}
+            />
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-[#111] border border-[#1e1e1e] border-dashed rounded-xl p-12 text-center">
-          <div className="w-10 h-10 rounded-xl bg-[#1a1a1a] flex items-center justify-center mx-auto mb-3">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <circle cx="9" cy="9" r="7" stroke="#555" strokeWidth="1.5" />
-              <path d="M9 5.5V9l2 2" stroke="#555" strokeWidth="1.5" strokeLinecap="round" />
+        <div
+          className="rounded-[14px] p-14 text-center"
+          style={{ background: '#111111', border: '1px dashed #1e1e1e' }}
+        >
+          <div
+            className="w-12 h-12 rounded-[12px] flex items-center justify-center mx-auto mb-4"
+            style={{ background: '#181818' }}
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="10" r="8" stroke="#2a2a2a" strokeWidth="1.5" />
+              <path d="M10 6v4l2.5 2" stroke="#2a2a2a" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </div>
-          <p className="text-[#555] text-sm">No posts found.</p>
-          <Link href="/post" className="text-indigo-400 text-sm hover:text-indigo-300 transition-colors mt-1 inline-block">
-            Create your first post →
+          <p className="text-sm font-medium mb-1" style={{ color: '#4a4a4a' }}>No posts found</p>
+          <p className="text-xs mb-4" style={{ color: '#2a2a2a' }}>
+            {accountFilter !== 'all' || platformFilter !== 'all' || statusFilter !== 'all'
+              ? 'Try adjusting your filters'
+              : 'Create your first post to see it here'}
+          </p>
+          <Link
+            href="/post"
+            className="text-xs transition-colors"
+            style={{ color: '#a78bfa' }}
+          >
+            Create a post →
           </Link>
         </div>
       ) : (
-        <div className="bg-[#111] border border-[#1e1e1e] rounded-xl overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[#1a1a1a]">
-                {['Date', 'Title', 'Account', 'Platforms', 'Status', 'Actions'].map((h) => (
-                  <th
-                    key={h}
-                    className="text-left text-[11px] text-[#555] uppercase tracking-widest font-medium px-4 py-3 first:pl-5 last:pr-5"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((post) => {
-                const account = accountMap[post.account_id];
-                return (
-                  <tr
-                    key={post.id}
-                    className="border-b border-[#0f0f0f] hover:bg-[#0f0f0f] transition-colors last:border-0 group"
-                  >
-                    <td className="px-4 py-3.5 pl-5">
-                      <span className="text-xs text-[#555] font-mono whitespace-nowrap">
+        <div className="space-y-3">
+          {filtered.map((post) => {
+            const account = accountMap[post.account_id];
+            return (
+              <div
+                key={post.id}
+                className="rounded-[14px] p-5 transition-all duration-150 card-hover"
+                style={{
+                  background: '#111111',
+                  border: '1px solid #1e1e1e',
+                }}
+              >
+                <div className="flex items-start gap-4">
+                  {/* Account avatar */}
+                  {account && (
+                    <div
+                      className="w-8 h-8 rounded-[8px] flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0 mt-0.5"
+                      style={{ backgroundColor: account.color, boxShadow: `0 2px 8px ${account.color}25` }}
+                    >
+                      {account.name[0].toUpperCase()}
+                    </div>
+                  )}
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4 mb-2">
+                      <span className="text-sm font-medium truncate" style={{ color: '#f5f5f5' }}>
+                        {post.title}
+                      </span>
+                      <StatusBadge status={post.status} />
+                    </div>
+
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {account && (
+                        <span className="text-xs" style={{ color: '#4a4a4a' }}>
+                          {account.name}
+                        </span>
+                      )}
+                      <span className="text-xs font-mono tabular-nums" style={{ color: '#333' }}>
                         {new Date(post.created_at).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
                           year: 'numeric',
                         })}
                       </span>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span className="text-sm text-white font-medium truncate max-w-[200px] block">
-                        {post.title}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      {account ? (
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
-                            style={{ backgroundColor: account.color }}
-                          >
-                            {account.name[0].toUpperCase()}
-                          </div>
-                          <span className="text-xs text-[#888] whitespace-nowrap">{account.name}</span>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-[#555]">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex flex-wrap gap-1">
-                        {(post.platforms as string[]).slice(0, 3).map((p) => (
+                      <div className="flex gap-1">
+                        {(post.platforms as string[]).map((p) => (
                           <PlatformBadge key={p} platform={p} size="sm" />
                         ))}
-                        {(post.platforms as string[]).length > 3 && (
-                          <span className="text-[10px] text-[#555] self-center">
-                            +{(post.platforms as string[]).length - 3}
-                          </span>
-                        )}
                       </div>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <StatusBadge status={post.status} />
-                    </td>
-                    <td className="px-4 py-3.5 pr-5">
-                      {post.request_id ? (
-                        <Link
-                          href={`/history/${post.id}`}
-                          className="text-[11px] text-indigo-400 hover:text-indigo-300 transition-colors opacity-0 group-hover:opacity-100"
-                        >
-                          Analytics →
-                        </Link>
-                      ) : (
-                        <span className="text-[11px] text-[#333]">—</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </div>
+                  </div>
 
-          <div className="px-5 py-3 border-t border-[#1a1a1a] flex items-center justify-between">
-            <span className="text-xs text-[#555]">
-              {filtered.length} post{filtered.length !== 1 ? 's' : ''}
-            </span>
-          </div>
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {post.request_id && (
+                      <Link
+                        href={`/analytics?requestId=${post.request_id}`}
+                        className="text-[11px] px-3 py-1.5 rounded-[8px] transition-all font-medium"
+                        style={{
+                          background: 'rgba(167,139,250,0.08)',
+                          color: '#a78bfa',
+                          border: '1px solid rgba(167,139,250,0.15)',
+                        }}
+                      >
+                        View Analytics
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

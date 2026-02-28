@@ -27,10 +27,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${syne.variable} ${dmSans.variable} antialiased bg-[#0a0a0a] text-white`}>
+      <body className={`${syne.variable} ${dmSans.variable} antialiased`} style={{ background: '#080808', color: '#f5f5f5' }}>
         <div className="flex min-h-screen">
           <Sidebar />
-          <main className="flex-1 ml-60 min-h-screen">
+          <main className="flex-1 min-h-screen" style={{ marginLeft: '220px' }}>
             {children}
           </main>
         </div>
