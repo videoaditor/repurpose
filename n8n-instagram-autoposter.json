@@ -1,0 +1,220 @@
+{
+  "name": "Instagram → TikTok + YouTube Auto-Poster",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "hours", "hoursInterval": 1 }]
+        }
+      },
+      "id": "cron-trigger",
+      "name": "Every Hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://graph.instagram.com/me/media",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "id,media_type,media_url,thumbnail_url,caption,timestamp,permalink"
+            },
+            {
+              "name": "limit",
+              "value": "5"
+            },
+            {
+              "name": "access_token",
+              "value": "={{ $credentials.httpQueryAuth.value }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fetch-ig-posts",
+      "name": "Fetch Latest IG Posts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300],
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "ig-token",
+          "name": "Instagram Access Token"
+        }
+      },
+      "notes": "Uses Instagram Basic Display API. Set your long-lived access token in credentials."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get posts from IG response\nconst data = $input.first().json.data || [];\n\n// Read last seen ID from static data (persists between runs)\nconst lastSeenId = $getWorkflowStaticData('global').lastSeenId || '';\n\n// Filter: only VIDEO or REELS, only newer than last seen\nconst newVideos = [];\nlet newestId = lastSeenId;\n\nfor (const post of data) {\n  if (post.media_type !== 'VIDEO' && post.media_type !== 'REELS') continue;\n  if (post.id === lastSeenId) break; // hit previously seen, stop\n  newVideos.push(post);\n  if (!newestId || newestId === lastSeenId) newestId = post.id;\n}\n\n// Save newest ID so next run skips these\nif (newestId && newestId !== lastSeenId) {\n  $getWorkflowStaticData('global').lastSeenId = newestId;\n}\n\nconsole.log(`Found ${newVideos.length} new video(s) to cross-post`);\n\nif (newVideos.length === 0) {\n  return [{ json: { skip: true, message: 'No new videos' } }];\n}\n\nreturn newVideos.map(v => ({ json: v }));"
+      },
+      "id": "filter-new-videos",
+      "name": "Filter New Videos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "skip-check",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "notEquals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "has-new-videos",
+      "name": "Has New Videos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate platform-specific captions using the IG caption as base\nconst post = $input.first().json;\nconst baseCaption = post.caption || '';\nconst title = baseCaption.split('\\n')[0].slice(0, 100) || 'New video';\n\n// TikTok: short + punchy + hashtags (keep IG hashtags if present)\nconst hashtags = (baseCaption.match(/#[\\w]+/g) || []).slice(0, 5).join(' ');\nconst cleanCaption = baseCaption.replace(/#[\\w]+/g, '').trim().slice(0, 200);\n\nconst tiktokCaption = (cleanCaption.slice(0, 150) + ' ' + hashtags).trim().slice(0, 300);\n\n// YouTube: descriptive title + longer desc\nconst youtubeTitle = title.slice(0, 100);\nconst youtubeDesc = `${cleanCaption}\\n\\n📸 Follow on Instagram: @alanoderso\\n\\n${hashtags}`;\n\nreturn [{\n  json: {\n    ...post,\n    tiktokCaption,\n    youtubeTitle,\n    youtubeDesc,\n    videoUrl: post.media_url,\n    title: youtubeTitle\n  }\n}];"
+      },
+      "id": "generate-captions",
+      "name": "Generate Platform Captions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 220]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.upload-post.com/api/upload",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Apikey {{ $credentials.httpHeaderAuth.value }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "user": "={{ $vars.UPLOAD_POST_USERNAME }}",
+          "platform": ["tiktok", "youtube"],
+          "url": "={{ $json.videoUrl }}",
+          "title": "={{ $json.youtubeTitle }}",
+          "tiktok_title": "={{ $json.tiktokCaption }}",
+          "youtube_title": "={{ $json.youtubeTitle }}",
+          "youtube_description": "={{ $json.youtubeDesc }}"
+        },
+        "options": {}
+      },
+      "id": "post-to-platforms",
+      "name": "Post to TikTok + YouTube",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 220],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "upload-post-key",
+          "name": "Upload-Post API Key"
+        }
+      },
+      "notes": "Set UPLOAD_POST_USERNAME in n8n variables. Auth = your Upload-Post API key."
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = $input.first().json;\nconst post = $('generate-captions').first().json;\n\nconsole.log('✅ Posted to TikTok + YouTube:', post.permalink);\nconsole.log('Upload-Post response:', JSON.stringify(result));\n\nreturn [{ json: { \n  success: true, \n  ig_post: post.permalink,\n  request_id: result.request_id,\n  platforms: result.platforms,\n  timestamp: new Date().toISOString()\n}}];"
+      },
+      "id": "log-result",
+      "name": "Log Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1560, 220]
+    },
+    {
+      "parameters": {
+        "message": "=✅ Auto-posted to TikTok + YouTube\n📸 Source: {{ $json.ig_post }}\n🆔 Request: {{ $json.request_id }}\n⏰ {{ $json.timestamp }}",
+        "additionalFields": {}
+      },
+      "id": "telegram-notify",
+      "name": "Notify via Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1780, 220],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "Telegram Bot"
+        }
+      },
+      "parameters": {
+        "chatId": "5865899775",
+        "text": "=✅ Auto-posted to TikTok + YouTube\n📸 Source: {{ $json.ig_post }}\n🆔 Upload-Post ID: {{ $json.request_id }}\n⏰ {{ $json.timestamp }}"
+      },
+      "notes": "Sends you a Telegram DM when a reel gets cross-posted. chatId = Alan's Telegram ID."
+    },
+    {
+      "parameters": {
+        "message": "No new reels on @alanoderso this hour. Skipping."
+      },
+      "id": "skip-log",
+      "name": "Skip (No New Videos)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1120, 420]
+    }
+  ],
+  "connections": {
+    "Every Hour": {
+      "main": [[{ "node": "Fetch Latest IG Posts", "type": "main", "index": 0 }]]
+    },
+    "Fetch Latest IG Posts": {
+      "main": [[{ "node": "Filter New Videos", "type": "main", "index": 0 }]]
+    },
+    "Filter New Videos": {
+      "main": [[{ "node": "Has New Videos?", "type": "main", "index": 0 }]]
+    },
+    "Has New Videos?": {
+      "main": [
+        [{ "node": "Generate Platform Captions", "type": "main", "index": 0 }],
+        [{ "node": "Skip (No New Videos)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Generate Platform Captions": {
+      "main": [[{ "node": "Post to TikTok + YouTube", "type": "main", "index": 0 }]]
+    },
+    "Post to TikTok + YouTube": {
+      "main": [[{ "node": "Log Result", "type": "main", "index": 0 }]]
+    },
+    "Log Result": {
+      "main": [[{ "node": "Notify via Telegram", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": ["repurpose", "instagram", "automation"],
+  "pinData": {},
+  "versionId": "1.0.0",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "repurpose"
+  }
+}

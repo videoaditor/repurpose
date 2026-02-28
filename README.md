@@ -34,3 +34,44 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+---
+
+## Instagram → TikTok + YouTube Auto-Poster (n8n)
+
+Polls `@alanoderso` every hour. When a new reel is detected, auto-posts to TikTok + YouTube via Upload-Post with platform-optimized captions. Sends you a Telegram notification when it fires.
+
+### Setup (5 min)
+
+**1. Import the workflow**
+- Open your n8n instance
+- New Workflow → Import from File → select `n8n-instagram-autoposter.json`
+
+**2. Add credentials (n8n Credentials panel)**
+
+| Credential | Type | Value |
+|---|---|---|
+| Instagram Access Token | HTTP Query Auth | Your IG long-lived token (get from graph.facebook.com/me?access_token=...) |
+| Upload-Post API Key | HTTP Header Auth | Your Upload-Post API key |
+| Telegram Bot | Telegram API | Your bot token (already set up) |
+
+**3. Set your Upload-Post username**
+- In n8n: Settings → Variables → Add `UPLOAD_POST_USERNAME` = your Upload-Post profile username
+
+**4. Get your Instagram Access Token**
+- Go to: https://developers.facebook.com/tools/explorer
+- Select your app → Get User Access Token → check `instagram_basic` + `pages_read_engagement`
+- Exchange for a long-lived token (lasts 60 days, auto-refresh available)
+
+**5. Activate**
+- Toggle the workflow ON
+- It runs every hour. First run saves the current latest reel as "seen" — subsequent runs only post NEW content.
+
+### What it does
+1. Every hour: fetches your 5 latest IG posts
+2. Filters for VIDEO/REELS only
+3. Checks if any are newer than last run (uses n8n static data — persists across runs)
+4. Generates TikTok caption (punchy, 300 chars, keeps hashtags) + YouTube title/description
+5. Posts to TikTok + YouTube via Upload-Post API
+6. Sends Telegram DM: "✅ Auto-posted to TikTok + YouTube"
+
