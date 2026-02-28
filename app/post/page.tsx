@@ -200,7 +200,7 @@ export default function PostPage() {
   };
 
   return (
-    <div className="p-8 max-w-2xl mx-auto animate-fade-in">
+    <div className="p-4 md:p-8 max-w-2xl mx-auto animate-fade-in">
       {/* Header */}
       <div className="mb-8">
         <h1 className="font-display text-[22px] font-bold tracking-tight" style={{ color: '#f5f5f5' }}>

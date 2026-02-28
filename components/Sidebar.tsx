@@ -81,7 +81,7 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="fixed top-0 left-0 h-full flex flex-col z-40 transition-all duration-200"
+      className="hidden md:flex fixed top-0 left-0 h-full flex-col z-40 transition-all duration-200"
       style={{
         width: collapsed ? '56px' : '220px',
         background: '#0a0a0a',

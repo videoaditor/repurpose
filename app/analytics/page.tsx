@@ -322,7 +322,7 @@ export default function AnalyticsPage() {
   };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto animate-fade-in">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto animate-fade-in">
       {/* Header row */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -401,7 +401,7 @@ export default function AnalyticsPage() {
       )}
 
       {loading ? (
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
               key={i}
@@ -413,7 +413,7 @@ export default function AnalyticsPage() {
       ) : (
         <>
           {/* Metric cards */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
             {metricCards.map((card) => (
               <div
                 key={card.label}
@@ -532,7 +532,7 @@ export default function AnalyticsPage() {
 
           {/* Per-platform sparklines */}
           {visiblePlatforms.length > 0 && (
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               {visiblePlatforms.map((platform) => {
                 const pData = data?.platforms[platform];
                 if (!pData) return null;

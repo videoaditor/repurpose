@@ -83,7 +83,7 @@ export default async function Dashboard() {
   ];
 
   return (
-    <div className="p-8 max-w-6xl mx-auto animate-fade-in">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -112,7 +112,7 @@ export default async function Dashboard() {
       </div>
 
       {/* Hero stat row */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {heroStats.map((stat) => (
           <div
             key={stat.label}
@@ -202,13 +202,13 @@ export default async function Dashboard() {
 
       {recentPosts.length > 0 ? (
         <div
-          className="rounded-[14px] overflow-hidden"
+          className="rounded-[14px] overflow-hidden overflow-x-auto"
           style={{
             background: '#111111',
             border: '1px solid #1e1e1e',
           }}
         >
-          <table className="w-full">
+          <table className="w-full min-w-[500px]">
             <thead>
               <tr style={{ borderBottom: '1px solid #181818' }}>
                 {['Title', 'Account', 'Platforms', 'Status', 'Date'].map((h) => (

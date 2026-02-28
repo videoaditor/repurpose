@@ -1,7 +1,8 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Syne, DM_Sans } from 'next/font/google';
 import './globals.css';
 import Sidebar from '@/components/Sidebar';
+import MobileNav from '@/components/MobileNav';
 
 const syne = Syne({
   subsets: ['latin'],
@@ -18,6 +19,20 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   title: 'Repurpose',
   description: 'Multi-platform content distribution at scale',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Repurpose',
+  },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#080808',
 };
 
 export default function RootLayout({
@@ -30,10 +45,12 @@ export default function RootLayout({
       <body className={`${syne.variable} ${dmSans.variable} antialiased`} style={{ background: '#080808', color: '#f5f5f5' }}>
         <div className="flex min-h-screen">
           <Sidebar />
-          <main className="flex-1 min-h-screen" style={{ marginLeft: '220px' }}>
+          {/* On mobile: no left margin, padding-bottom for bottom nav. On md+: left margin for sidebar */}
+          <main className="flex-1 min-h-screen pb-16 md:pb-0 md:ml-[220px]">
             {children}
           </main>
         </div>
+        <MobileNav />
       </body>
     </html>
   );
