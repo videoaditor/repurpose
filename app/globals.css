@@ -168,6 +168,22 @@
   background-size: 40px 40px;
 }
 
+/* Sidebar nav item hover states */
+.sidebar-nav-item {
+  color: #4a4a4a;
+  background: transparent;
+  border: 1px solid transparent;
+}
+.sidebar-nav-item:hover {
+  color: #888;
+  background: #141414;
+}
+.sidebar-nav-item.active {
+  color: #a78bfa;
+  background: rgba(167,139,250,0.08);
+  border-color: rgba(167,139,250,0.15);
+}
+
 /* Platform color utilities */
 .platform-tiktok { color: #fe2c55; }
 .platform-youtube { color: #ff0000; }

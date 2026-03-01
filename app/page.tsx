@@ -102,7 +102,7 @@ export default async function Dashboard() {
             color: '#a78bfa',
             border: '1px solid rgba(167,139,250,0.2)',
           }}
-          onMouseEnter={() => {}}
+          
         >
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
             <path d="M6.5 1.5v10M1.5 6.5h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
@@ -232,12 +232,7 @@ export default async function Dashboard() {
                     style={{
                       borderBottom: idx < recentPosts.length - 1 ? '1px solid #0f0f0f' : 'none',
                     }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLTableRowElement).style.background = '#0f0f0f';
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLTableRowElement).style.background = 'transparent';
-                    }}
+
                   >
                     <td className="px-4 py-3.5 pl-5">
                       <span className="text-sm font-medium truncate max-w-[180px] block" style={{ color: '#f5f5f5' }}>

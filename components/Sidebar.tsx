@@ -147,26 +147,11 @@ export default function Sidebar() {
             <div key={item.href} className="relative group mb-0.5">
               <Link
                 href={item.href}
-                className="flex items-center transition-all duration-150 rounded-[10px]"
+                className={`sidebar-nav-item flex items-center transition-all duration-150 rounded-[10px] ${isActive ? 'active' : ''}`}
                 style={{
                   gap: collapsed ? 0 : '10px',
                   padding: collapsed ? '9px 0' : '9px 10px',
                   justifyContent: collapsed ? 'center' : 'flex-start',
-                  color: isActive ? '#a78bfa' : '#4a4a4a',
-                  background: isActive ? 'rgba(167,139,250,0.08)' : 'transparent',
-                  border: `1px solid ${isActive ? 'rgba(167,139,250,0.15)' : 'transparent'}`,
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    (e.currentTarget as HTMLAnchorElement).style.color = '#888';
-                    (e.currentTarget as HTMLAnchorElement).style.background = '#141414';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    (e.currentTarget as HTMLAnchorElement).style.color = '#4a4a4a';
-                    (e.currentTarget as HTMLAnchorElement).style.background = 'transparent';
-                  }
                 }}
               >
                 <span className="flex-shrink-0">{item.icon}</span>
