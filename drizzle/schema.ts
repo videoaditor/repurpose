@@ -22,6 +22,8 @@ export const posts = sqliteTable('posts', {
   posted_at: text('posted_at'),
   created_at: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
   post_urls: text('post_urls', { mode: 'json' }).$type<Record<string, string>>(),
+  automation_rule_id: integer('automation_rule_id'),
+  source_url: text('source_url'),
 });
 
 export const captions = sqliteTable('captions', {
@@ -32,9 +34,22 @@ export const captions = sqliteTable('captions', {
   used: integer('used', { mode: 'boolean' }).notNull().default(false),
 });
 
+export const automationRules = sqliteTable('automation_rules', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  account_id: integer('account_id').notNull().references(() => accounts.id),
+  enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
+  source_platform: text('source_platform').notNull().default('instagram'),
+  target_platforms: text('target_platforms', { mode: 'json' }).$type<string[]>().notNull(),
+  last_checked_at: text('last_checked_at'),
+  last_reel_id: text('last_reel_id'),
+  created_at: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
 export type Account = typeof accounts.$inferSelect;
 export type Post = typeof posts.$inferSelect;
 export type Caption = typeof captions.$inferSelect;
+export type AutomationRule = typeof automationRules.$inferSelect;
 export type NewAccount = typeof accounts.$inferInsert;
 export type NewPost = typeof posts.$inferInsert;
 export type NewCaption = typeof captions.$inferInsert;
+export type NewAutomationRule = typeof automationRules.$inferInsert;

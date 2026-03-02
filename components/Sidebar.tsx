@@ -42,14 +42,14 @@ const nav = [
     ),
   },
   {
-    href: '/flows',
-    label: 'Flows',
+    href: '/automation',
+    label: 'Automation',
     icon: (
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <rect x="1" y="4" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.4" />
-        <rect x="11" y="4" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="1.4" />
-        <path d="M5 6h2.5M8.5 6H11" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-        <circle cx="8" cy="6" r="0.8" fill="currentColor" />
+        <path d="M3 8a5 5 0 0 1 10 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        <path d="M13 8a5 5 0 0 1-10 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeDasharray="2 2" />
+        <circle cx="8" cy="8" r="1.5" fill="currentColor" />
+        <path d="M8 3V1.5M13 8h1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
       </svg>
     ),
   },

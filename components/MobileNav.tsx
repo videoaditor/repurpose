@@ -17,25 +17,14 @@ const nav = [
     ),
   },
   {
-    href: '/analytics',
-    label: 'Analytics',
+    href: '/automation',
+    label: 'Auto',
     icon: (
       <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
-        <path d="M2 12l3.5-4 3 2.5L12 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="2" cy="12" r="1.2" fill="currentColor" />
-        <circle cx="5.5" cy="8" r="1.2" fill="currentColor" />
-        <circle cx="8.5" cy="10.5" r="1.2" fill="currentColor" />
-        <circle cx="12" cy="5" r="1.2" fill="currentColor" />
-      </svg>
-    ),
-  },
-  {
-    href: '/post',
-    label: 'Post',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
-        <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4" />
-        <path d="M8 5v6M5 8h6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        <path d="M3 8a5 5 0 0 1 10 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        <path d="M13 8a5 5 0 0 1-10 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeDasharray="2 2" />
+        <circle cx="8" cy="8" r="1.5" fill="currentColor" />
+        <path d="M8 3V1.5M13 8h1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
       </svg>
     ),
     primary: true,
