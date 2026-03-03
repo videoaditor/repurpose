@@ -6,8 +6,10 @@ export const accounts = sqliteTable('accounts', {
   name: text('name').notNull(),
   username: text('username').notNull(),
   api_key: text('api_key').notNull(),
+  upload_post_username: text('upload_post_username'),
   color: text('color').notNull().default('#6366f1'),
   platforms: text('platforms', { mode: 'json' }).$type<string[]>().notNull(),
+  connected_platforms: text('connected_platforms', { mode: 'json' }).$type<string[]>(),
   created_at: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 

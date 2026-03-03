@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { automationRules, accounts, posts } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
-import { checkForNewReels, extractReelId } from '@/lib/instagram-poller';
+import { checkForNewReels, extractReelId, downloadReel, cleanupVideo } from '@/lib/instagram-poller';
 import { generateCaptions } from '@/lib/captions';
-import { postVideo } from '@/lib/uploadpost';
+import { uploadVideo } from '@/lib/uploadpost';
 
 export async function POST(
   request: Request,
@@ -33,11 +33,17 @@ export async function POST(
       return NextResponse.json({ error: 'Account not found' }, { status: 404 });
     }
 
-    // Check for new reels
-    const newReels = await checkForNewReels(account, rule, manualReelUrl);
+    const uploadPostUser = account.upload_post_username || account.username;
+
+    // Check for new reels using correct API
+    const newReels = await checkForNewReels(
+      account.api_key,
+      uploadPostUser,
+      rule.last_reel_id,
+      manualReelUrl
+    );
 
     if (newReels.length === 0) {
-      // Update last_checked_at
       await db
         .update(automationRules)
         .set({ last_checked_at: new Date().toISOString() })
@@ -46,47 +52,68 @@ export async function POST(
       return NextResponse.json({ processed: 0, message: 'No new reels found' });
     }
 
-    const processed: { reel_id: string; post_id: number; status: string }[] = [];
+    const processed: { reel_id: string; post_id: number; status: string; error?: string }[] = [];
+    const targetPlatforms = rule.target_platforms as string[];
 
     for (const reel of newReels) {
+      let videoPath: string | undefined;
+      
       try {
-        // Generate captions
-        const caption = reel.caption || `New Instagram Reel`;
-        const captions = await generateCaptions(caption, caption);
-
-        const targetPlatforms = rule.target_platforms as string[];
-
-        // Build postVideo params
-        const uploadParams = {
-          video_url: reel.url,
-          title: captions.youtube_title || caption,
-          description: captions.youtube_desc,
-          platforms: targetPlatforms,
-          tiktok_caption: captions.tiktok,
-          youtube_title: captions.youtube_title,
-          youtube_description: captions.youtube_desc,
-        };
-
-        let requestId: string | undefined;
-        let uploadStatus = 'pending';
-
-        try {
-          const uploadResult = await postVideo(account.api_key, uploadParams);
-          requestId = uploadResult.request_id;
-          uploadStatus = 'posted';
-        } catch (uploadErr) {
-          console.error('Upload failed for reel', reel.id, uploadErr);
-          uploadStatus = 'failed';
+        // 1. Download the reel video via yt-dlp
+        console.log(`Downloading reel: ${reel.url}`);
+        videoPath = await downloadReel(reel.url);
+        console.log(`Downloaded to: ${videoPath}`);
+        
+        // Verify file exists and log size
+        const fs = await import('fs');
+        const exists = fs.existsSync(videoPath);
+        console.log(`File exists: ${exists}`);
+        if (exists) {
+          const stats = fs.statSync(videoPath);
+          console.log(`File size: ${stats.size} bytes`);
         }
 
-        // Save to posts table
+        // 2. Transcribe + generate captions from actual video content
+        const captionText = reel.caption || '';
+        const captions = await generateCaptions(captionText, captionText, { videoPath });
+
+        // 3. Upload video file via upload-post.com
+        let requestId: string | undefined;
+        let uploadStatus = 'pending';
+        let uploadError: string | undefined;
+
+        try {
+          const uploadResult = await uploadVideo(account.api_key, {
+            user: uploadPostUser,
+            videoPath,
+            platforms: targetPlatforms,
+            title: captions.youtube_title || captionText,
+            description: captions.youtube_desc,
+            tiktok_title: captions.tiktok,
+            youtube_title: captions.youtube_title,
+            youtube_description: captions.youtube_desc,
+            async_upload: true,
+          });
+
+          requestId = uploadResult.request_id;
+          uploadStatus = uploadResult.success ? 'posted' : 'failed';
+          if (!uploadResult.success) {
+            uploadError = uploadResult.message || 'Upload failed';
+          }
+        } catch (err) {
+          console.error('Upload failed for reel', reel.id, err);
+          uploadStatus = 'failed';
+          uploadError = err instanceof Error ? err.message : 'Upload failed';
+        }
+
+        // 4. Save to posts table
         const [savedPost] = await db
           .insert(posts)
           .values({
             account_id: account.id,
             request_id: requestId,
-            title: captions.youtube_title || caption,
-            base_caption: caption,
+            title: captions.youtube_title || captionText,
+            base_caption: captionText,
             platforms: targetPlatforms,
             status: uploadStatus,
             posted_at: uploadStatus === 'posted' ? new Date().toISOString() : undefined,
@@ -99,9 +126,10 @@ export async function POST(
           reel_id: reel.id,
           post_id: savedPost.id,
           status: uploadStatus,
+          error: uploadError,
         });
 
-        // Update rule's last_reel_id to this reel
+        // 5. Update rule's last_reel_id
         const reelId = manualReelUrl ? extractReelId(reel.url) : reel.id;
         await db
           .update(automationRules)
@@ -112,7 +140,17 @@ export async function POST(
           .where(eq(automationRules.id, rule.id));
       } catch (err) {
         console.error('Error processing reel', reel.id, err);
-        processed.push({ reel_id: reel.id, post_id: -1, status: 'error' });
+        processed.push({
+          reel_id: reel.id,
+          post_id: -1,
+          status: 'error',
+          error: err instanceof Error ? err.message : 'Processing error',
+        });
+      } finally {
+        // Clean up downloaded video
+        if (videoPath) {
+          cleanupVideo(videoPath);
+        }
       }
     }
 

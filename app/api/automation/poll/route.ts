@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { automationRules, accounts, posts } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
-import { checkForNewReels, extractReelId } from '@/lib/instagram-poller';
+import { checkForNewReels, extractReelId, downloadReel, cleanupVideo } from '@/lib/instagram-poller';
 import { generateCaptions } from '@/lib/captions';
-import { postVideo } from '@/lib/uploadpost';
+import { uploadVideo } from '@/lib/uploadpost';
 
 // Called by the external cron poller every 15 minutes
 export async function POST() {
@@ -36,9 +36,15 @@ export async function POST() {
 
       if (!account) continue;
 
+      const uploadPostUser = account.upload_post_username || account.username;
+
       let newReels;
       try {
-        newReels = await checkForNewReels(account, rule);
+        newReels = await checkForNewReels(
+          account.api_key,
+          uploadPostUser,
+          rule.last_reel_id
+        );
       } catch (err) {
         console.error(`Poller: failed to check reels for rule ${rule.id}`, err);
         continue;
@@ -57,31 +63,37 @@ export async function POST() {
 
       let posted = 0;
       let failed = 0;
+      const targetPlatforms = rule.target_platforms as string[];
 
       for (const reel of newReels) {
+        let videoPath: string | undefined;
+        
         try {
-          const caption = reel.caption || `New Instagram Reel from @${account.username}`;
-          const captions = await generateCaptions(caption, caption);
-          const targetPlatforms = rule.target_platforms as string[];
-
-          const uploadParams = {
-            video_url: reel.url,
-            title: captions.youtube_title || caption,
-            description: captions.youtube_desc,
-            platforms: targetPlatforms,
-            tiktok_caption: captions.tiktok,
-            youtube_title: captions.youtube_title,
-            youtube_description: captions.youtube_desc,
-          };
+          // Download the reel
+          videoPath = await downloadReel(reel.url);
+          
+          const captionText = reel.caption || '';
+          const captions = await generateCaptions(captionText, captionText, { videoPath });
 
           let requestId: string | undefined;
           let uploadStatus = 'pending';
 
           try {
-            const uploadResult = await postVideo(account.api_key, uploadParams);
+            const uploadResult = await uploadVideo(account.api_key, {
+              user: uploadPostUser,
+              videoPath,
+              platforms: targetPlatforms,
+              title: captions.youtube_title || captionText,
+              description: captions.youtube_desc,
+              tiktok_title: captions.tiktok,
+              youtube_title: captions.youtube_title,
+              youtube_description: captions.youtube_desc,
+              async_upload: true,
+            });
             requestId = uploadResult.request_id;
-            uploadStatus = 'posted';
-            posted++;
+            uploadStatus = uploadResult.success ? 'posted' : 'failed';
+            if (uploadResult.success) posted++;
+            else failed++;
           } catch (uploadErr) {
             console.error(`Poller: upload failed for reel ${reel.id}`, uploadErr);
             uploadStatus = 'failed';
@@ -91,8 +103,8 @@ export async function POST() {
           await db.insert(posts).values({
             account_id: account.id,
             request_id: requestId,
-            title: captions.youtube_title || caption,
-            base_caption: caption,
+            title: captions.youtube_title || captionText,
+            base_caption: captionText,
             platforms: targetPlatforms,
             status: uploadStatus,
             posted_at: uploadStatus === 'posted' ? new Date().toISOString() : undefined,
@@ -108,6 +120,10 @@ export async function POST() {
         } catch (err) {
           console.error(`Poller: error processing reel ${reel.id}`, err);
           failed++;
+        } finally {
+          if (videoPath) {
+            cleanupVideo(videoPath);
+          }
         }
       }
 

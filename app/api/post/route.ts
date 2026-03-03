@@ -2,9 +2,12 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { accounts, posts, captions } from '@/drizzle/schema';
 import { eq } from 'drizzle-orm';
-import { postVideo } from '@/lib/uploadpost';
+import { uploadVideo } from '@/lib/uploadpost';
+import { downloadReel, cleanupVideo, extractReelId } from '@/lib/instagram-poller';
 
 export async function POST(request: Request) {
+  let videoPath: string | undefined;
+  
   try {
     const body = await request.json();
     const { accountId, platforms, videoUrl, title, captionData, baseCaption } = body;
@@ -19,24 +22,42 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Account not found' }, { status: 404 });
     }
 
-    // Call upload-post API
+    const uploadPostUser = account.upload_post_username || account.username;
+
+    // Check if this is an Instagram URL that needs downloading
+    const isInstagramUrl = videoUrl.includes('instagram.com');
+    
+    if (isInstagramUrl) {
+      // Download the video first
+      console.log(`Downloading video from: ${videoUrl}`);
+      videoPath = await downloadReel(videoUrl);
+      console.log(`Downloaded to: ${videoPath}`);
+    } else {
+      // For direct video URLs, we'd need different handling
+      // For now, only support IG URLs
+      return NextResponse.json({ 
+        error: 'Only Instagram URLs are supported. Paste an Instagram reel URL.' 
+      }, { status: 400 });
+    }
+
+    // Upload via upload-post.com
     let requestId: string | undefined;
     let postStatus = 'pending';
 
     try {
-      const result = await postVideo(account.api_key, {
-        video_url: videoUrl,
-        title,
+      const result = await uploadVideo(account.api_key, {
+        user: uploadPostUser,
+        videoPath,
         platforms,
-        tiktok_caption: captionData?.tiktok,
+        title,
+        description: captionData?.youtube_desc,
+        tiktok_title: captionData?.tiktok,
         youtube_title: captionData?.youtube_title,
         youtube_description: captionData?.youtube_desc,
-        instagram_caption: captionData?.instagram,
-        twitter_caption: captionData?.x,
-        linkedin_caption: captionData?.linkedin,
+        async_upload: true,
       });
       requestId = result.request_id;
-      postStatus = 'posted';
+      postStatus = result.success ? 'posted' : 'failed';
     } catch (uploadError) {
       console.error('Upload-post API error:', uploadError);
       postStatus = 'failed';
@@ -51,6 +72,7 @@ export async function POST(request: Request) {
       platforms,
       status: postStatus,
       posted_at: postStatus === 'posted' ? new Date().toISOString() : null,
+      source_url: videoUrl,
     }).returning();
 
     // Save captions
@@ -70,7 +92,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({
-      success: true,
+      success: postStatus === 'posted',
       postId: post.id,
       requestId,
       status: postStatus,
@@ -78,5 +100,10 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('POST /api/post error:', error);
     return NextResponse.json({ error: 'Failed to create post' }, { status: 500 });
+  } finally {
+    // Clean up downloaded video
+    if (videoPath) {
+      cleanupVideo(videoPath);
+    }
   }
 }
