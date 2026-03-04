@@ -115,7 +115,7 @@ function TrendArrow({ value }: { value: number }) {
   return (
     <span
       className="inline-flex items-center gap-0.5 text-[11px] font-medium"
-      style={{ color: positive ? '#34d399' : '#ef4444' }}
+      style={{ color: positive ? '#34d399' : '#f43f5e' }}
     >
       {positive ? '↑' : '↓'} {Math.abs(value).toFixed(1)}%
     </span>
@@ -242,11 +242,11 @@ export default function AnalyticsPage() {
       value: data?.summary.totalViews ?? 0,
       icon: (
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M1 7s2.5-4.5 6-4.5S13 7 13 7s-2.5 4.5-6 4.5S1 7 1 7z" stroke="#a78bfa" strokeWidth="1.3" />
-          <circle cx="7" cy="7" r="2" stroke="#a78bfa" strokeWidth="1.3" />
+          <path d="M1 7s2.5-4.5 6-4.5S13 7 13 7s-2.5 4.5-6 4.5S1 7 1 7z" stroke="#2dd4bf" strokeWidth="1.3" />
+          <circle cx="7" cy="7" r="2" stroke="#2dd4bf" strokeWidth="1.3" />
         </svg>
       ),
-      color: '#a78bfa',
+      color: '#2dd4bf',
       trend: 12.4,
     },
     {
@@ -277,11 +277,11 @@ export default function AnalyticsPage() {
       value: data?.summary.totalComments ?? 0,
       icon: (
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <rect x="1" y="1" width="12" height="9" rx="2" stroke="#fb923c" strokeWidth="1.3" />
-          <path d="M4 13l3-3H1l3 3z" stroke="#fb923c" strokeWidth="1.3" strokeLinejoin="round" />
+          <rect x="1" y="1" width="12" height="9" rx="2" stroke="#f59e0b" strokeWidth="1.3" />
+          <path d="M4 13l3-3H1l3 3z" stroke="#f59e0b" strokeWidth="1.3" strokeLinejoin="round" />
         </svg>
       ),
-      color: '#fb923c',
+      color: '#f59e0b',
       trend: -2.3,
     },
     {
@@ -289,13 +289,13 @@ export default function AnalyticsPage() {
       value: Object.values(data?.platforms ?? {}).reduce((s, p) => s + p.shares, 0),
       icon: (
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <circle cx="11" cy="3" r="1.5" stroke="#60a5fa" strokeWidth="1.3" />
-          <circle cx="11" cy="11" r="1.5" stroke="#60a5fa" strokeWidth="1.3" />
-          <circle cx="3" cy="7" r="1.5" stroke="#60a5fa" strokeWidth="1.3" />
-          <path d="M4.5 7.5L9.5 11M4.5 6.5L9.5 3" stroke="#60a5fa" strokeWidth="1.3" />
+          <circle cx="11" cy="3" r="1.5" stroke="#38bdf8" strokeWidth="1.3" />
+          <circle cx="11" cy="11" r="1.5" stroke="#38bdf8" strokeWidth="1.3" />
+          <circle cx="3" cy="7" r="1.5" stroke="#38bdf8" strokeWidth="1.3" />
+          <path d="M4.5 7.5L9.5 11M4.5 6.5L9.5 3" stroke="#38bdf8" strokeWidth="1.3" />
         </svg>
       ),
-      color: '#60a5fa',
+      color: '#38bdf8',
       trend: 18.2,
     },
     {
@@ -303,10 +303,10 @@ export default function AnalyticsPage() {
       value: data?.total_impressions ?? 0,
       icon: (
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M2 10l3-4 2.5 2L10 5l2 3" stroke="#a78bfa" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M2 10l3-4 2.5 2L10 5l2 3" stroke="#2dd4bf" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       ),
-      color: '#a78bfa',
+      color: '#2dd4bf',
       trend: 22.5,
     },
   ];
@@ -314,7 +314,7 @@ export default function AnalyticsPage() {
   const inputBg = {
     background: 'rgba(14, 14, 18, 0.6)',
     border: '1px solid rgba(255, 255, 255, 0.06)',
-    color: '#f5f5f5',
+    color: '#eaeaee',
     borderRadius: '10px',
     padding: '8px 12px',
     fontSize: '13px',
@@ -327,10 +327,10 @@ export default function AnalyticsPage() {
       {/* Header row */}
       <div className="flex items-center justify-between mb-2">
         <div>
-          <h1 className="font-display text-[24px] font-bold tracking-tight" style={{ color: '#f0f0f0' }}>
+          <h1 className="font-display text-[24px] font-bold tracking-tight" style={{ color: '#eaeaee' }}>
             Analytics
           </h1>
-          <p className="text-sm mt-0.5" style={{ color: '#6b6b6b' }}>
+          <p className="text-sm mt-0.5" style={{ color: '#5c5c6a' }}>
             Performance metrics across all platforms
           </p>
         </div>
@@ -357,8 +357,8 @@ export default function AnalyticsPage() {
                 onClick={() => setTimeRange(r)}
                 className="px-3 py-2 text-xs font-medium transition-all"
                 style={{
-                  background: timeRange === r ? 'rgba(167,139,250,0.12)' : 'transparent',
-                  color: timeRange === r ? '#a78bfa' : '#4a4a4a',
+                  background: timeRange === r ? 'rgba(45,212,191,0.12)' : 'transparent',
+                  color: timeRange === r ? '#2dd4bf' : '#444450',
                   borderRight: r !== '90d' ? '1px solid #1e1e1e' : 'none',
                 }}
               >
@@ -373,7 +373,7 @@ export default function AnalyticsPage() {
       <div className="flex items-center gap-1.5 mb-6">
         {platformTabs.map((tab) => {
           const isActive = activePlatformTab === tab;
-          const color = tab === 'all' ? '#a78bfa' : (PLATFORM_COLORS[tab] ?? '#888');
+          const color = tab === 'all' ? '#2dd4bf' : (PLATFORM_COLORS[tab] ?? '#888');
           return (
             <button
               key={tab}
@@ -381,8 +381,8 @@ export default function AnalyticsPage() {
               className="px-3 py-1.5 text-xs font-medium rounded-[8px] transition-all duration-150"
               style={{
                 background: isActive ? `${color}15` : 'transparent',
-                color: isActive ? color : '#4a4a4a',
-                border: `1px solid ${isActive ? `${color}30` : '#1a1a1a'}`,
+                color: isActive ? color : '#444450',
+                border: `1px solid ${isActive ? `${color}30` : '#16161e'}`,
               }}
             >
               {tab === 'all' ? 'All Platforms' : (PLATFORM_LABELS[tab] ?? tab)}
@@ -394,7 +394,7 @@ export default function AnalyticsPage() {
       {error && (
         <div
           className="rounded-[10px] px-4 py-3 mb-5 text-xs"
-          style={{ background: 'rgba(251,146,60,0.06)', border: '1px solid rgba(251,146,60,0.15)', color: '#fb923c' }}
+          style={{ background: 'rgba(251,146,60,0.06)', border: '1px solid rgba(251,146,60,0.15)', color: '#f59e0b' }}
         >
           {error} — showing demo data
         </div>
@@ -406,7 +406,7 @@ export default function AnalyticsPage() {
             <div
               key={i}
               className="rounded-[14px] shimmer"
-              style={{ height: '96px', border: '1px solid #1a1a1a' }}
+              style={{ height: '96px', border: '1px solid #16161e' }}
             />
           ))}
         </div>
@@ -428,10 +428,10 @@ export default function AnalyticsPage() {
                   </div>
                   <TrendArrow value={card.trend} />
                 </div>
-                <div className="text-[26px] font-bold font-mono tabular-nums leading-none mb-1" style={{ color: '#f5f5f5' }}>
+                <div className="text-[26px] font-bold font-mono tabular-nums leading-none mb-1" style={{ color: '#eaeaee' }}>
                   {fmt(card.value)}
                 </div>
-                <div className="text-[11px] uppercase tracking-widest" style={{ color: '#4a4a4a' }}>
+                <div className="text-[11px] uppercase tracking-widest" style={{ color: '#444450' }}>
                   {card.label}
                 </div>
               </div>
@@ -452,7 +452,7 @@ export default function AnalyticsPage() {
                     <path d="M10.8 3.2S10.6 2.1 10 1.5c-.6-.6-1.3-.7-1.6-.7C7 .7 5 .7 5 .7S3 .7 1.6.8C1.3.8.6.9 0 1.5-.6 2.1-.8 3.2-.8 3.2S-1 4.5-1 5.8v1.2c0 1.3.2 2.6.2 2.6S.4 10.7 1 11.3c.6.6 1.5.6 1.9.7C4.3 12.1 6 12.1 6 12.1s2 0 3.4-.1c.3 0 1-.1 1.6-.7s.8-1.7.8-1.7.2-1.3.2-2.6V5.8c0-1.3-.2-2.6-.2-2.6zM4.5 8.1V3.9l4 2.1-4 2.1z" />
                   </svg>
                 </div>
-                <h3 className="font-display font-semibold text-[13px]" style={{ color: '#f5f5f5' }}>
+                <h3 className="font-display font-semibold text-[13px]" style={{ color: '#eaeaee' }}>
                   YouTube Insights
                 </h3>
               </div>
@@ -468,7 +468,7 @@ export default function AnalyticsPage() {
                   {
                     label: 'Total Views',
                     value: fmt(ytData.views),
-                    color: '#fb923c',
+                    color: '#f59e0b',
                     trend: 'All time',
                   },
                   {
@@ -488,13 +488,13 @@ export default function AnalyticsPage() {
                   {
                     label: 'Comments',
                     value: fmt(ytData.comments),
-                    color: '#60a5fa',
+                    color: '#38bdf8',
                     trend: 'Total engagement',
                   },
                   {
                     label: 'Saves',
                     value: fmt(ytData.saves),
-                    color: '#a78bfa',
+                    color: '#2dd4bf',
                     trend: 'Playlist adds',
                   },
                 ].map((item) => (
@@ -502,10 +502,10 @@ export default function AnalyticsPage() {
                     <div className="text-[20px] font-bold font-mono tabular-nums" style={{ color: item.color }}>
                       {item.value}
                     </div>
-                    <div className="text-[11px] font-medium mt-0.5" style={{ color: '#f5f5f5' }}>
+                    <div className="text-[11px] font-medium mt-0.5" style={{ color: '#eaeaee' }}>
                       {item.label}
                     </div>
-                    <div className="text-[10px] mt-0.5" style={{ color: '#4a4a4a' }}>
+                    <div className="text-[10px] mt-0.5" style={{ color: '#444450' }}>
                       {item.trend}
                     </div>
                   </div>
@@ -565,10 +565,10 @@ export default function AnalyticsPage() {
                         { label: 'Likes', value: pData.likes },
                       ].map((m) => (
                         <div key={m.label}>
-                          <div className="text-[16px] font-bold font-mono tabular-nums" style={{ color: '#f5f5f5' }}>
+                          <div className="text-[16px] font-bold font-mono tabular-nums" style={{ color: '#eaeaee' }}>
                             {fmt(m.value)}
                           </div>
-                          <div className="text-[10px] uppercase tracking-wide mt-0.5" style={{ color: '#4a4a4a' }}>
+                          <div className="text-[10px] uppercase tracking-wide mt-0.5" style={{ color: '#444450' }}>
                             {m.label}
                           </div>
                         </div>
@@ -596,14 +596,14 @@ export default function AnalyticsPage() {
             <div
               className="glass-card rounded-[14px] overflow-hidden"
             >
-              <div className="px-5 py-4" style={{ borderBottom: '1px solid #181818' }}>
-                <h3 className="font-display font-semibold text-[13px]" style={{ color: '#f5f5f5' }}>
+              <div className="px-5 py-4" style={{ borderBottom: '1px solid #16161e' }}>
+                <h3 className="font-display font-semibold text-[13px]" style={{ color: '#eaeaee' }}>
                   Platform Breakdown
                 </h3>
               </div>
               <table className="w-full">
                 <thead>
-                  <tr style={{ borderBottom: '1px solid #181818' }}>
+                  <tr style={{ borderBottom: '1px solid #16161e' }}>
                     {['Platform', 'Followers', 'Views', 'Likes', 'Eng. Rate', 'Comments', 'Shares'].map((h) => (
                       <th
                         key={h}
@@ -624,7 +624,7 @@ export default function AnalyticsPage() {
                     return (
                       <tr
                         key={platform}
-                        style={{ borderBottom: idx < arr.length - 1 ? '1px solid #0f0f0f' : 'none' }}
+                        style={{ borderBottom: idx < arr.length - 1 ? '1px solid #0d0d10' : 'none' }}
                       >
                         <td className="px-4 py-3.5 pl-5">
                           <div className="flex items-center gap-2">
@@ -632,25 +632,25 @@ export default function AnalyticsPage() {
                               className="w-1.5 h-5 rounded-full"
                               style={{ background: color }}
                             />
-                            <span className="text-sm font-medium" style={{ color: '#f5f5f5' }}>
+                            <span className="text-sm font-medium" style={{ color: '#eaeaee' }}>
                               {PLATFORM_LABELS[platform] ?? platform}
                             </span>
                           </div>
                         </td>
                         <td className="px-4 py-3.5">
-                          <span className="text-sm font-mono tabular-nums" style={{ color: '#f5f5f5' }}>{fmt(pData.followers)}</span>
+                          <span className="text-sm font-mono tabular-nums" style={{ color: '#eaeaee' }}>{fmt(pData.followers)}</span>
                         </td>
                         <td className="px-4 py-3.5">
-                          <span className="text-sm font-mono tabular-nums" style={{ color: '#f5f5f5' }}>{fmt(pData.views)}</span>
+                          <span className="text-sm font-mono tabular-nums" style={{ color: '#eaeaee' }}>{fmt(pData.views)}</span>
                         </td>
                         <td className="px-4 py-3.5">
-                          <span className="text-sm font-mono tabular-nums" style={{ color: '#f5f5f5' }}>{fmt(pData.likes)}</span>
+                          <span className="text-sm font-mono tabular-nums" style={{ color: '#eaeaee' }}>{fmt(pData.likes)}</span>
                         </td>
                         <td className="px-4 py-3.5">
                           <span
                             className="text-[11px] font-medium px-2 py-0.5 rounded-[6px]"
                             style={{
-                              color: parseFloat(engRate) > 3 ? '#34d399' : '#f5f5f5',
+                              color: parseFloat(engRate) > 3 ? '#34d399' : '#eaeaee',
                               background: parseFloat(engRate) > 3 ? 'rgba(52,211,153,0.08)' : 'transparent',
                             }}
                           >
@@ -658,10 +658,10 @@ export default function AnalyticsPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3.5">
-                          <span className="text-sm font-mono tabular-nums" style={{ color: '#6b6b6b' }}>{fmt(pData.comments)}</span>
+                          <span className="text-sm font-mono tabular-nums" style={{ color: '#5c5c6a' }}>{fmt(pData.comments)}</span>
                         </td>
                         <td className="px-4 py-3.5">
-                          <span className="text-sm font-mono tabular-nums" style={{ color: '#6b6b6b' }}>{fmt(pData.shares)}</span>
+                          <span className="text-sm font-mono tabular-nums" style={{ color: '#5c5c6a' }}>{fmt(pData.shares)}</span>
                         </td>
                       </tr>
                     );
@@ -676,7 +676,7 @@ export default function AnalyticsPage() {
               className="rounded-[14px] p-14 text-center"
               style={{ background: '#111111', border: '1px dashed #1e1e1e' }}
             >
-              <p className="text-sm" style={{ color: '#4a4a4a' }}>
+              <p className="text-sm" style={{ color: '#444450' }}>
                 No analytics data available. Connect an account to get started.
               </p>
             </div>

@@ -26,7 +26,6 @@ const nav = [
         <path d="M8 5v6M5 8h6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
       </svg>
     ),
-    badge: 'new',
   },
   {
     href: '/analytics',
@@ -83,15 +82,15 @@ export default function Sidebar() {
       className="hidden md:flex fixed top-0 left-0 h-full flex-col z-40 transition-all duration-200"
       style={{
         width: collapsed ? '56px' : '220px',
-        background: '#08080a',
-        borderRight: '1px solid #18181e',
+        background: '#070709',
+        borderRight: '1px solid #16161e',
       }}
     >
       {/* Logo */}
       <div
         className="flex items-center border-b"
         style={{
-          borderColor: '#1a1a1a',
+          borderColor: '#16161e',
           padding: collapsed ? '20px 0' : '20px 16px',
           justifyContent: collapsed ? 'center' : 'space-between',
           minHeight: '60px',
@@ -101,14 +100,14 @@ export default function Sidebar() {
           <div className="flex items-center gap-2.5">
             <div
               className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 breathe-glow"
-              style={{ background: 'linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)' }}
+              style={{ background: 'linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%)' }}
             >
               <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
                 <path d="M2 4l5-3 5 3v6l-5 3-5-3V4z" stroke="white" strokeWidth="1.3" strokeLinejoin="round" />
                 <path d="M7 1v12M2 4l5 3 5-3" stroke="white" strokeWidth="1.3" strokeLinecap="round" />
               </svg>
             </div>
-            <span className="font-display font-bold text-[14px] tracking-tight" style={{ color: '#f5f5f5' }}>
+            <span className="font-display font-bold text-[14px] tracking-tight" style={{ color: '#eaeaee' }}>
               Repurpose
             </span>
           </div>
@@ -116,7 +115,7 @@ export default function Sidebar() {
         {collapsed && (
           <div
             className="w-6 h-6 rounded-lg flex items-center justify-center breathe-glow"
-            style={{ background: 'linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)' }}
+            style={{ background: 'linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%)' }}
           >
             <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
               <path d="M2 4l5-3 5 3v6l-5 3-5-3V4z" stroke="white" strokeWidth="1.3" strokeLinejoin="round" />
@@ -128,7 +127,7 @@ export default function Sidebar() {
           <button
             onClick={() => setCollapsed(true)}
             className="transition-colors p-1 rounded"
-            style={{ color: '#333' }}
+            style={{ color: '#333340' }}
             title="Collapse"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -157,21 +156,13 @@ export default function Sidebar() {
                 {!collapsed && (
                   <span className="text-[13px] font-medium flex-1">{item.label}</span>
                 )}
-                {!collapsed && item.badge && (
-                  <span
-                    className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider"
-                    style={{ background: 'rgba(167,139,250,0.15)', color: '#a78bfa' }}
-                  >
-                    {item.badge}
-                  </span>
-                )}
               </Link>
 
               {/* Tooltip for collapsed mode */}
               {collapsed && (
                 <div
                   className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50"
-                  style={{ background: '#1a1a1a', color: '#f5f5f5', border: '1px solid #2a2a2a', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}
+                  style={{ background: '#18181f', color: '#eaeaee', border: '1px solid #252530', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}
                 >
                   {item.label}
                 </div>
@@ -185,14 +176,14 @@ export default function Sidebar() {
       <div
         className="border-t flex items-center"
         style={{
-          borderColor: '#1a1a1a',
+          borderColor: '#16161e',
           padding: collapsed ? '16px 0' : '14px 16px',
           justifyContent: collapsed ? 'center' : 'space-between',
         }}
       >
         {!collapsed ? (
           <>
-            <p className="text-[10px] font-mono" style={{ color: '#2a2a2e' }}>v2.0.0</p>
+            <p className="text-[10px] font-mono" style={{ color: '#252530' }}>v2.0.0</p>
             <button
               onClick={() => setCollapsed(false)}
               className="opacity-0 pointer-events-none"
@@ -202,7 +193,7 @@ export default function Sidebar() {
           <button
             onClick={() => setCollapsed(false)}
             className="transition-colors"
-            style={{ color: '#333' }}
+            style={{ color: '#333340' }}
             title="Expand"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">

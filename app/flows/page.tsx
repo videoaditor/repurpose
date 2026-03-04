@@ -163,9 +163,9 @@ function NewFlowDialog({
         <button
           className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-[10px] transition-all duration-200"
           style={{
-            background: 'linear-gradient(135deg, rgba(167,139,250,0.15), rgba(96,165,250,0.08))',
-            color: '#a78bfa',
-            border: '1px solid rgba(167,139,250,0.2)',
+            background: 'linear-gradient(135deg, rgba(45,212,191,0.15), rgba(56,189,248,0.08))',
+            color: '#2dd4bf',
+            border: '1px solid rgba(45,212,191,0.2)',
           }}
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -178,15 +178,15 @@ function NewFlowDialog({
       <DialogContent
         className="max-w-md"
         style={{
-          background: '#0e0e12',
+          background: '#0c0c10',
           border: '1px solid rgba(255,255,255,0.06)',
           borderRadius: '16px',
-          color: '#f5f5f5',
+          color: '#eaeaee',
           backdropFilter: 'blur(24px)',
         }}
       >
         <DialogHeader>
-          <DialogTitle style={{ color: '#f5f5f5', fontSize: '16px', fontWeight: 700 }}>
+          <DialogTitle style={{ color: '#eaeaee', fontSize: '16px', fontWeight: 700 }}>
             Create New Flow
           </DialogTitle>
         </DialogHeader>
@@ -194,33 +194,33 @@ function NewFlowDialog({
         <div className="space-y-5 pt-3">
           {/* Source */}
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: '#6b6b6b' }}>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: '#5c5c6a' }}>
               Source Platform
             </label>
             <div
               className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-[10px] text-sm"
-              style={{ background: '#0a0a0e', border: '1px solid #1c1c22', color: '#c13584' }}
+              style={{ background: '#08080c', border: '1px solid #1a1a22', color: '#c13584' }}
             >
               <PlatformIcon platform="instagram" size={22} />
-              <span style={{ color: '#f5f5f5' }}>Instagram (Reels)</span>
+              <span style={{ color: '#eaeaee' }}>Instagram (Reels)</span>
             </div>
           </div>
 
           {/* Account */}
           <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: '#6b6b6b' }}>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: '#5c5c6a' }}>
               Account
             </label>
             {accounts.length === 0 ? (
               <p className="text-xs" style={{ color: '#555' }}>
-                No accounts found. <a href="/accounts" style={{ color: '#a78bfa' }}>Add one →</a>
+                No accounts found. <a href="/accounts" style={{ color: '#2dd4bf' }}>Add one →</a>
               </p>
             ) : (
               <select
                 value={accountId}
                 onChange={(e) => setAccountId(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-[10px] text-sm focus:outline-none"
-                style={{ background: '#0a0a0e', border: '1px solid #1c1c22', color: '#f5f5f5' }}
+                style={{ background: '#08080c', border: '1px solid #1a1a22', color: '#eaeaee' }}
               >
                 {accounts.map((a) => (
                   <option key={a.id} value={a.id}>
@@ -233,7 +233,7 @@ function NewFlowDialog({
 
           {/* Destinations */}
           <div>
-            <label className="block text-xs font-medium mb-2" style={{ color: '#6b6b6b' }}>
+            <label className="block text-xs font-medium mb-2" style={{ color: '#5c5c6a' }}>
               Destinations
             </label>
             <div className="space-y-1.5">
@@ -245,7 +245,7 @@ function NewFlowDialog({
                     key={p.id}
                     className="flex items-center gap-3 p-3 rounded-[10px] cursor-pointer transition-all duration-150"
                     style={{
-                      border: `1px solid ${checked ? `${color}30` : '#1c1c22'}`,
+                      border: `1px solid ${checked ? `${color}30` : '#1a1a22'}`,
                       background: checked ? `${color}06` : 'transparent',
                     }}
                   >
@@ -254,7 +254,7 @@ function NewFlowDialog({
                       className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
                       style={{
                         background: checked ? color : 'transparent',
-                        border: `1.5px solid ${checked ? color : '#2a2a2e'}`,
+                        border: `1.5px solid ${checked ? color : '#252530'}`,
                       }}
                     >
                       {checked && (
@@ -264,7 +264,7 @@ function NewFlowDialog({
                       )}
                     </div>
                     <PlatformIcon platform={p.id} size={22} />
-                    <span className="text-sm" style={{ color: checked ? '#f5f5f5' : '#6b6b6b' }}>
+                    <span className="text-sm" style={{ color: checked ? '#eaeaee' : '#5c5c6a' }}>
                       {p.label}
                     </span>
                   </label>
@@ -276,7 +276,7 @@ function NewFlowDialog({
           {error && (
             <p
               className="text-xs px-3 py-2 rounded-[8px]"
-              style={{ color: '#ef4444', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.12)' }}
+              style={{ color: '#f43f5e', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.12)' }}
             >
               {error}
             </p>
@@ -287,9 +287,9 @@ function NewFlowDialog({
             disabled={saving || accounts.length === 0 || targets.length === 0}
             className="w-full py-2.5 text-sm font-semibold rounded-[10px] transition-all duration-200 disabled:opacity-30"
             style={{
-              background: 'linear-gradient(135deg, rgba(167,139,250,0.18), rgba(96,165,250,0.10))',
-              color: '#a78bfa',
-              border: '1px solid rgba(167,139,250,0.25)',
+              background: 'linear-gradient(135deg, rgba(45,212,191,0.18), rgba(56,189,248,0.10))',
+              color: '#2dd4bf',
+              border: '1px solid rgba(45,212,191,0.25)',
             }}
           >
             {saving ? 'Creating…' : 'Create Flow'}
@@ -402,7 +402,7 @@ export default function FlowsPage() {
           style={{
             background: toast.type === 'success' ? 'rgba(52,211,153,0.10)' : 'rgba(239,68,68,0.10)',
             border: `1px solid ${toast.type === 'success' ? 'rgba(52,211,153,0.20)' : 'rgba(239,68,68,0.20)'}`,
-            color: toast.type === 'success' ? '#34d399' : '#ef4444',
+            color: toast.type === 'success' ? '#34d399' : '#f43f5e',
             backdropFilter: 'blur(16px)',
           }}
         >
@@ -413,10 +413,10 @@ export default function FlowsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div>
-          <h1 className="font-display text-[24px] font-bold tracking-tight" style={{ color: '#f0f0f0' }}>
+          <h1 className="font-display text-[24px] font-bold tracking-tight" style={{ color: '#eaeaee' }}>
             Flows
           </h1>
-          <p className="text-sm mt-0.5" style={{ color: '#6b6b6b' }}>
+          <p className="text-sm mt-0.5" style={{ color: '#5c5c6a' }}>
             Automate your content repurposing across platforms
           </p>
         </div>
@@ -435,17 +435,17 @@ export default function FlowsPage() {
             className="w-2 h-2 rounded-full pulse-dot"
             style={{ background: enabledCount > 0 ? '#34d399' : '#333' }}
           />
-          <span style={{ color: '#6b6b6b' }}>
-            <span style={{ color: '#f5f5f5', fontWeight: 600 }}>{enabledCount}</span> active flow{enabledCount !== 1 ? 's' : ''}
+          <span style={{ color: '#5c5c6a' }}>
+            <span style={{ color: '#eaeaee', fontWeight: 600 }}>{enabledCount}</span> active flow{enabledCount !== 1 ? 's' : ''}
           </span>
         </div>
-        <div style={{ width: 1, height: 16, background: '#1c1c22' }} />
-        <span style={{ color: '#6b6b6b' }}>
-          <span style={{ color: '#f5f5f5', fontWeight: 600 }}>{rules.length}</span> total
+        <div style={{ width: 1, height: 16, background: '#1a1a22' }} />
+        <span style={{ color: '#5c5c6a' }}>
+          <span style={{ color: '#eaeaee', fontWeight: 600 }}>{rules.length}</span> total
         </span>
-        <div style={{ width: 1, height: 16, background: '#1c1c22' }} />
-        <span style={{ color: '#6b6b6b' }}>
-          Polling every <span style={{ color: '#a78bfa', fontWeight: 600 }}>15 min</span>
+        <div style={{ width: 1, height: 16, background: '#1a1a22' }} />
+        <span style={{ color: '#5c5c6a' }}>
+          Polling every <span style={{ color: '#2dd4bf', fontWeight: 600 }}>15 min</span>
         </span>
       </div>
 
@@ -453,7 +453,7 @@ export default function FlowsPage() {
       {loading ? (
         <div className="space-y-4">
           {[1, 2].map((i) => (
-            <div key={i} className="h-32 rounded-[16px] shimmer" style={{ border: '1px solid #1c1c22' }} />
+            <div key={i} className="h-32 rounded-[16px] shimmer" style={{ border: '1px solid #1a1a22' }} />
           ))}
         </div>
       ) : rules.length === 0 ? (
@@ -462,18 +462,18 @@ export default function FlowsPage() {
         >
           <div
             className="w-16 h-16 rounded-[16px] flex items-center justify-center mx-auto mb-5"
-            style={{ background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.12)' }}
+            style={{ background: 'rgba(45,212,191,0.06)', border: '1px solid rgba(45,212,191,0.12)' }}
           >
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-              <rect x="2" y="8" width="7" height="8" rx="2" stroke="#a78bfa" strokeWidth="1.5" opacity="0.6" />
-              <rect x="15" y="8" width="7" height="8" rx="2" stroke="#a78bfa" strokeWidth="1.5" opacity="0.6" />
-              <path d="M9 12h6M12 10l2 2-2 2" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <rect x="2" y="8" width="7" height="8" rx="2" stroke="#2dd4bf" strokeWidth="1.5" opacity="0.6" />
+              <rect x="15" y="8" width="7" height="8" rx="2" stroke="#2dd4bf" strokeWidth="1.5" opacity="0.6" />
+              <path d="M9 12h6M12 10l2 2-2 2" stroke="#2dd4bf" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <h3 className="font-display font-bold text-[17px] mb-2" style={{ color: '#f0f0f0' }}>
+          <h3 className="font-display font-bold text-[17px] mb-2" style={{ color: '#eaeaee' }}>
             Automate your repurposing
           </h3>
-          <p className="text-sm mb-6 max-w-xs mx-auto" style={{ color: '#4a4a4a' }}>
+          <p className="text-sm mb-6 max-w-xs mx-auto" style={{ color: '#444450' }}>
             Create your first flow to automatically cross-post new Instagram Reels to YouTube, TikTok, and more
           </p>
           <NewFlowDialog accounts={accounts} onSave={handleCreate} />
@@ -491,7 +491,7 @@ export default function FlowsPage() {
                 <div className="flex items-center gap-2.5">
                   <PlatformIcon platform={rule.source_platform} size={32} />
                   <div>
-                    <div className="text-[13px] font-semibold" style={{ color: '#f0f0f0' }}>
+                    <div className="text-[13px] font-semibold" style={{ color: '#eaeaee' }}>
                       {account?.name ?? 'Unknown'}
                     </div>
                     <div className="text-[11px] font-mono" style={{ color: '#555' }}>
@@ -504,7 +504,7 @@ export default function FlowsPage() {
                 <div className="flex items-center gap-2 flex-1 min-w-[60px]">
                   <div className={`flex-1 rounded-full ${rule.enabled ? 'flow-pipe' : 'flow-pipe-off'}`} />
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ opacity: rule.enabled ? 1 : 0.3 }}>
-                    <path d="M4 8h8M9 5l3 3-3 3" stroke="#a78bfa" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M4 8h8M9 5l3 3-3 3" stroke="#2dd4bf" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
 
@@ -526,7 +526,7 @@ export default function FlowsPage() {
                   </button>
                   <span
                     className="text-[9px] uppercase tracking-wider font-semibold"
-                    style={{ color: rule.enabled ? '#34d399' : '#3a3a3a' }}
+                    style={{ color: rule.enabled ? '#34d399' : '#333340' }}
                   >
                     {rule.enabled ? 'Live' : 'Off'}
                   </span>
@@ -536,28 +536,28 @@ export default function FlowsPage() {
               {/* Meta row */}
               <div className="flex items-center gap-5 mt-4 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
                 <div>
-                  <div className="text-[9px] uppercase tracking-wider mb-0.5 font-medium" style={{ color: '#3a3a3a' }}>
+                  <div className="text-[9px] uppercase tracking-wider mb-0.5 font-medium" style={{ color: '#333340' }}>
                     Last Checked
                   </div>
-                  <div className="text-[11px] font-mono" style={{ color: '#6b6b6b' }}>
+                  <div className="text-[11px] font-mono" style={{ color: '#5c5c6a' }}>
                     {fmtDate(rule.last_checked_at)}
                   </div>
                 </div>
                 {rule.last_reel_id && (
                   <div>
-                    <div className="text-[9px] uppercase tracking-wider mb-0.5 font-medium" style={{ color: '#3a3a3a' }}>
+                    <div className="text-[9px] uppercase tracking-wider mb-0.5 font-medium" style={{ color: '#333340' }}>
                       Last Reel
                     </div>
-                    <div className="text-[11px] font-mono truncate max-w-[120px]" style={{ color: '#6b6b6b' }}>
+                    <div className="text-[11px] font-mono truncate max-w-[120px]" style={{ color: '#5c5c6a' }}>
                       {rule.last_reel_id}
                     </div>
                   </div>
                 )}
                 <div>
-                  <div className="text-[9px] uppercase tracking-wider mb-0.5 font-medium" style={{ color: '#3a3a3a' }}>
+                  <div className="text-[9px] uppercase tracking-wider mb-0.5 font-medium" style={{ color: '#333340' }}>
                     Route
                   </div>
-                  <div className="text-[11px]" style={{ color: '#6b6b6b' }}>
+                  <div className="text-[11px]" style={{ color: '#5c5c6a' }}>
                     IG → {(rule.target_platforms as string[]).map((p) => PLATFORM_LABELS[p] ?? p).join(' + ')}
                   </div>
                 </div>
@@ -572,9 +572,9 @@ export default function FlowsPage() {
                     disabled={triggeringId === rule.id}
                     className="px-3.5 py-1.5 rounded-[8px] text-xs font-medium transition-all duration-200 disabled:opacity-30"
                     style={{
-                      background: 'rgba(167,139,250,0.06)',
-                      color: '#a78bfa',
-                      border: '1px solid rgba(167,139,250,0.12)',
+                      background: 'rgba(45,212,191,0.06)',
+                      color: '#2dd4bf',
+                      border: '1px solid rgba(45,212,191,0.12)',
                     }}
                   >
                     {triggeringId === rule.id ? (
@@ -600,7 +600,7 @@ export default function FlowsPage() {
                   <button
                     onClick={() => handleDelete(rule.id)}
                     className="w-7 h-7 rounded-[8px] flex items-center justify-center transition-all duration-200"
-                    style={{ color: '#3a3a3a', border: '1px solid #1c1c22' }}
+                    style={{ color: '#333340', border: '1px solid #1a1a22' }}
                     title="Delete flow"
                   >
                     <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
@@ -629,7 +629,7 @@ export default function FlowsPage() {
                       onChange={(e) => setManualUrl(e.target.value)}
                       placeholder="https://www.instagram.com/reel/..."
                       className="flex-1 px-3 py-2 rounded-[8px] text-xs focus:outline-none"
-                      style={{ background: '#0a0a0e', border: '1px solid #1c1c22', color: '#f5f5f5' }}
+                      style={{ background: '#08080c', border: '1px solid #1a1a22', color: '#eaeaee' }}
                     />
                     <button
                       onClick={() => manualUrl && handleTrigger(rule, manualUrl)}
@@ -656,10 +656,10 @@ export default function FlowsPage() {
         className="glass-card mt-8 rounded-[12px] px-4 py-3 flex items-center gap-3 text-xs"
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="flex-shrink-0">
-          <circle cx="7" cy="7" r="6" stroke="#4a4a4a" strokeWidth="1.3" />
-          <path d="M7 6v4M7 4.5h.01" stroke="#4a4a4a" strokeWidth="1.3" strokeLinecap="round" />
+          <circle cx="7" cy="7" r="6" stroke="#444450" strokeWidth="1.3" />
+          <path d="M7 6v4M7 4.5h.01" stroke="#444450" strokeWidth="1.3" strokeLinecap="round" />
         </svg>
-        <span style={{ color: '#4a4a4a' }}>
+        <span style={{ color: '#444450' }}>
           Flows poll for new Instagram Reels every 15 minutes. Toggle a flow ON to activate real-time automation, or use
           &ldquo;Check Now&rdquo; to trigger manually.
         </span>

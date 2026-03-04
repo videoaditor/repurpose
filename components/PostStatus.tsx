@@ -79,7 +79,7 @@ export default function PostStatus({ statuses }: PostStatusProps) {
               <div className="flex items-center gap-1.5">
                 <div className="w-5 h-5 rounded-full bg-red-500/15 flex items-center justify-center">
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                    <path d="M3 3l4 4M7 3l-4 4" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" />
+                    <path d="M3 3l4 4M7 3l-4 4" stroke="#f43f5e" strokeWidth="1.5" strokeLinecap="round" />
                   </svg>
                 </div>
                 <span className="text-red-400 text-xs">{item.message ?? 'Failed'}</span>

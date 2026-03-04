@@ -58,8 +58,8 @@ export default function MobileNav() {
       className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-stretch"
       style={{
         height: '60px',
-        background: '#08080a',
-        borderTop: '1px solid #18181e',
+        background: '#070709',
+        borderTop: '1px solid #16161e',
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
@@ -71,7 +71,7 @@ export default function MobileNav() {
             href={item.href}
             className="flex flex-col items-center justify-center flex-1 gap-0.5 transition-colors"
             style={{
-              color: isActive ? '#a78bfa' : '#4a4a4a',
+              color: isActive ? '#2dd4bf' : '#444450',
               minHeight: '44px',
             }}
           >
@@ -81,8 +81,8 @@ export default function MobileNav() {
                 style={{
                   width: '36px',
                   height: '36px',
-                  background: isActive ? 'rgba(167,139,250,0.2)' : 'rgba(167,139,250,0.1)',
-                  color: '#a78bfa',
+                  background: isActive ? 'rgba(45,212,191,0.15)' : 'rgba(45,212,191,0.08)',
+                  color: '#2dd4bf',
                 }}
               >
                 {item.icon}

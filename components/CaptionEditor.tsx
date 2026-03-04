@@ -61,7 +61,7 @@ export default function CaptionEditor({ captions, onChange }: CaptionEditorProps
 
   return (
     <Tabs defaultValue="tiktok" className="w-full">
-      <TabsList className="w-full bg-[#0f0f0f] border border-[#1e1e1e] p-1 rounded-xl h-auto flex-wrap gap-1">
+      <TabsList className="w-full bg-[#0d0d10] border border-[#1e1e1e] p-1 rounded-xl h-auto flex-wrap gap-1">
         {platformTabs.map((tab) => (
           <TabsTrigger
             key={tab.key}
@@ -95,7 +95,7 @@ export default function CaptionEditor({ captions, onChange }: CaptionEditorProps
                 <Textarea
                   value={value}
                   onChange={(e) => handleChange(field.key as keyof CaptionData, e.target.value)}
-                  className={`min-h-[100px] bg-[#0f0f0f] border rounded-xl text-sm text-white placeholder-[#444] resize-none focus:outline-none transition-colors ${
+                  className={`min-h-[100px] bg-[#0d0d10] border rounded-xl text-sm text-white placeholder-[#444] resize-none focus:outline-none transition-colors ${
                     overLimit
                       ? 'border-red-500/50 focus:border-red-500'
                       : 'border-[#1e1e1e] focus:border-indigo-500/50'

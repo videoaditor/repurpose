@@ -95,10 +95,10 @@ export default function AccountsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div>
-          <h1 className="font-display text-[24px] font-bold tracking-tight" style={{ color: '#f0f0f0' }}>
+          <h1 className="font-display text-[24px] font-bold tracking-tight" style={{ color: '#eaeaee' }}>
             Accounts
           </h1>
-          <p className="text-sm mt-0.5" style={{ color: '#6b6b6b' }}>
+          <p className="text-sm mt-0.5" style={{ color: '#5c5c6a' }}>
             Auto-synced from your Upload-Post profiles
           </p>
         </div>
@@ -106,9 +106,9 @@ export default function AccountsPage() {
           onClick={() => setShowKeyInput(!showKeyInput)}
           className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-[10px] transition-all duration-200"
           style={{
-            background: 'linear-gradient(135deg, rgba(167,139,250,0.15), rgba(96,165,250,0.08))',
-            color: '#a78bfa',
-            border: '1px solid rgba(167,139,250,0.2)',
+            background: 'linear-gradient(135deg, rgba(45,212,191,0.15), rgba(56,189,248,0.08))',
+            color: '#2dd4bf',
+            border: '1px solid rgba(45,212,191,0.2)',
           }}
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -127,18 +127,18 @@ export default function AccountsPage() {
           <div className="flex items-center gap-2 mb-3">
             <div
               className="w-7 h-7 rounded-[8px] flex items-center justify-center"
-              style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.2)' }}
+              style={{ background: 'rgba(45,212,191,0.12)', border: '1px solid rgba(45,212,191,0.2)' }}
             >
               <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                <path d="M7 1v12M1 7h12" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M7 1v12M1 7h12" stroke="#2dd4bf" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             </div>
-            <h2 className="font-display font-semibold text-[13px]" style={{ color: '#f0f0f0' }}>
+            <h2 className="font-display font-semibold text-[13px]" style={{ color: '#eaeaee' }}>
               Sync from Upload-Post
             </h2>
           </div>
 
-          <p className="text-[12px] mb-4" style={{ color: '#6b6b6b' }}>
+          <p className="text-[12px] mb-4" style={{ color: '#5c5c6a' }}>
             Paste your Upload-Post API key below. We'll auto-discover all your profiles
             and their connected platforms — no manual setup needed.
           </p>
@@ -154,7 +154,7 @@ export default function AccountsPage() {
               style={{
                 background: 'rgba(14, 14, 18, 0.6)',
                 border: '1px solid rgba(255, 255, 255, 0.06)',
-                color: '#f0f0f0',
+                color: '#eaeaee',
                 backdropFilter: 'blur(16px)',
               }}
             />
@@ -163,7 +163,7 @@ export default function AccountsPage() {
               disabled={syncing}
               className="px-5 py-2.5 rounded-[10px] text-sm font-semibold transition-all duration-200 disabled:opacity-50"
               style={{
-                background: 'linear-gradient(135deg, #a78bfa, #7c3aed)',
+                background: 'linear-gradient(135deg, #2dd4bf, #14b8a6)',
                 color: '#fff',
                 boxShadow: '0 4px 14px rgba(124, 58, 237, 0.3)',
               }}
@@ -180,14 +180,14 @@ export default function AccountsPage() {
             </button>
           </div>
 
-          <p className="text-[11px] mt-3" style={{ color: '#4a4a4a' }}>
+          <p className="text-[11px] mt-3" style={{ color: '#444450' }}>
             Get your API key at{' '}
             <a
               href="https://app.upload-post.com/api-keys"
               target="_blank"
               rel="noopener noreferrer"
               className="transition-colors"
-              style={{ color: '#a78bfa' }}
+              style={{ color: '#2dd4bf' }}
             >
               app.upload-post.com/api-keys ↗
             </a>
@@ -206,7 +206,7 @@ export default function AccountsPage() {
             border: `1px solid ${syncResult.type === 'success'
               ? 'rgba(52,211,153,0.15)'
               : 'rgba(251,146,60,0.15)'}`,
-            color: syncResult.type === 'success' ? '#34d399' : '#fb923c',
+            color: syncResult.type === 'success' ? '#34d399' : '#f59e0b',
           }}
         >
           {syncResult.message}
@@ -228,26 +228,26 @@ export default function AccountsPage() {
         <div className="glass-card gradient-border rounded-[14px] p-12 text-center">
           <div
             className="w-14 h-14 rounded-[12px] flex items-center justify-center mx-auto mb-4"
-            style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.15)' }}
+            style={{ background: 'rgba(45,212,191,0.08)', border: '1px solid rgba(45,212,191,0.15)' }}
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="8" r="4" stroke="#a78bfa" strokeWidth="1.5" opacity="0.6" />
-              <path d="M4 20c0-4.418 3.582-7 8-7s8 2.582 8 7" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
+              <circle cx="12" cy="8" r="4" stroke="#2dd4bf" strokeWidth="1.5" opacity="0.6" />
+              <path d="M4 20c0-4.418 3.582-7 8-7s8 2.582 8 7" stroke="#2dd4bf" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
             </svg>
           </div>
-          <p className="text-[15px] font-medium mb-1.5" style={{ color: '#f0f0f0' }}>
+          <p className="text-[15px] font-medium mb-1.5" style={{ color: '#eaeaee' }}>
             No accounts connected
           </p>
-          <p className="text-[13px] mb-4" style={{ color: '#4a4a4a' }}>
+          <p className="text-[13px] mb-4" style={{ color: '#444450' }}>
             Click "Connect" above and paste your Upload-Post API key to auto-import your profiles
           </p>
           <button
             onClick={() => setShowKeyInput(true)}
             className="px-5 py-2.5 rounded-[10px] text-sm font-semibold transition-all duration-200"
             style={{
-              background: 'linear-gradient(135deg, rgba(167,139,250,0.15), rgba(96,165,250,0.08))',
-              color: '#a78bfa',
-              border: '1px solid rgba(167,139,250,0.2)',
+              background: 'linear-gradient(135deg, rgba(45,212,191,0.15), rgba(56,189,248,0.08))',
+              color: '#2dd4bf',
+              border: '1px solid rgba(45,212,191,0.2)',
             }}
           >
             Connect Upload-Post ↗
@@ -269,7 +269,7 @@ export default function AccountsPage() {
                     {account.name.slice(0, 2).toUpperCase()}
                   </div>
                   <div>
-                    <div className="font-medium text-sm" style={{ color: '#f0f0f0' }}>
+                    <div className="font-medium text-sm" style={{ color: '#eaeaee' }}>
                       {account.name}
                     </div>
                     <div className="text-[11px] font-mono" style={{ color: '#555' }}>
@@ -294,7 +294,7 @@ export default function AccountsPage() {
               </div>
 
               {/* Connected platforms */}
-              <div className="text-[10px] uppercase tracking-widest font-medium mb-2" style={{ color: '#3a3a3a' }}>
+              <div className="text-[10px] uppercase tracking-widest font-medium mb-2" style={{ color: '#333340' }}>
                 Connected Platforms
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -303,7 +303,7 @@ export default function AccountsPage() {
                     <PlatformBadge key={p} platform={p} size="sm" />
                   ))
                 ) : (
-                  <span className="text-[11px]" style={{ color: '#4a4a4a' }}>
+                  <span className="text-[11px]" style={{ color: '#444450' }}>
                     No platforms connected on Upload-Post
                   </span>
                 )}
@@ -315,7 +315,7 @@ export default function AccountsPage() {
 
       {/* Info footer */}
       {accounts.length > 0 && (
-        <div className="glass-card rounded-[10px] px-4 py-3 mt-6 flex items-center gap-3 text-[11px]" style={{ color: '#4a4a4a' }}>
+        <div className="glass-card rounded-[10px] px-4 py-3 mt-6 flex items-center gap-3 text-[11px]" style={{ color: '#444450' }}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="flex-shrink-0">
             <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2" />
             <path d="M7 4v1M7 6.5v4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
@@ -325,7 +325,7 @@ export default function AccountsPage() {
             href="https://app.upload-post.com/manage-users"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ color: '#a78bfa' }}
+            style={{ color: '#2dd4bf' }}
           >
             upload-post.com ↗
           </a>

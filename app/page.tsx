@@ -10,9 +10,9 @@ export const dynamic = 'force-dynamic';
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; color: string; bg: string }> = {
     posted: { label: 'Posted', color: '#34d399', bg: 'rgba(52,211,153,0.08)' },
-    scheduled: { label: 'Scheduled', color: '#fb923c', bg: 'rgba(251,146,60,0.08)' },
-    failed: { label: 'Failed', color: '#ef4444', bg: 'rgba(239,68,68,0.08)' },
-    pending: { label: 'Pending', color: '#6b6b6b', bg: 'rgba(107,107,107,0.08)' },
+    scheduled: { label: 'Scheduled', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
+    failed: { label: 'Failed', color: '#f43f5e', bg: 'rgba(244,63,94,0.08)' },
+    pending: { label: 'Pending', color: '#5c5c6a', bg: 'rgba(92,92,106,0.08)' },
   };
   const cfg = map[status] ?? map.pending;
   return (
@@ -25,7 +25,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function Sparkline({ color = '#a78bfa' }: { color?: string }) {
+function Sparkline({ color = '#2dd4bf' }: { color?: string }) {
   const pts = [8, 14, 10, 6, 12, 4, 9, 7, 5, 3, 8, 5, 6, 2, 4, 6];
   const w = 80;
   const h = 28;
@@ -88,20 +88,20 @@ export default async function Dashboard() {
   const enabledRules = allRules.filter((r) => r.enabled).length;
 
   const heroStats = [
-    { label: 'Auto Rules', value: enabledRules, sub: 'active', color: '#a78bfa' },
+    { label: 'Auto Rules', value: enabledRules, sub: 'active', color: '#2dd4bf' },
     { label: 'Posts This Week', value: postsThisWeek, sub: 'published', color: '#f472b6' },
-    { label: 'Platforms Active', value: activePlatforms.size, sub: 'channels', color: '#34d399' },
-    { label: 'Total Posts', value: recentPosts.length, sub: 'all time', color: '#fb923c' },
+    { label: 'Platforms Active', value: activePlatforms.size, sub: 'channels', color: '#f59e0b' },
+    { label: 'Total Posts', value: recentPosts.length, sub: 'all time', color: '#818cf8' },
   ];
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto animate-fade-in">
       <div className="flex items-center justify-between mb-2">
         <div>
-          <h1 className="font-display text-[24px] font-bold tracking-tight" style={{ color: '#f0f0f0' }}>
+          <h1 className="font-display text-[24px] font-bold tracking-tight" style={{ color: '#eaeaee' }}>
             Dashboard
           </h1>
-          <p className="text-sm mt-0.5" style={{ color: '#6b6b6b' }}>
+          <p className="text-sm mt-0.5" style={{ color: '#5c5c6a' }}>
             Instagram → YouTube &amp; TikTok auto-crosspost
           </p>
         </div>
@@ -109,9 +109,9 @@ export default async function Dashboard() {
           href="/flows"
           className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-[10px] transition-all duration-200"
           style={{
-            background: 'linear-gradient(135deg, rgba(167,139,250,0.15), rgba(96,165,250,0.08))',
-            color: '#a78bfa',
-            border: '1px solid rgba(167,139,250,0.2)',
+            background: 'linear-gradient(135deg, rgba(45,212,191,0.12), rgba(56,189,248,0.06))',
+            color: '#2dd4bf',
+            border: '1px solid rgba(45,212,191,0.18)',
           }}
         >
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
@@ -135,11 +135,11 @@ export default async function Dashboard() {
               <div>
                 <div
                   className="text-[28px] font-bold font-mono leading-none tabular-nums"
-                  style={{ color: '#f0f0f0' }}
+                  style={{ color: '#eaeaee' }}
                 >
                   {stat.value}
                 </div>
-                <div className="text-[11px] mt-1.5 uppercase tracking-widest font-medium" style={{ color: '#6b6b6b' }}>
+                <div className="text-[11px] mt-1.5 uppercase tracking-widest font-medium" style={{ color: '#5c5c6a' }}>
                   {stat.label}
                 </div>
               </div>
@@ -151,10 +151,10 @@ export default async function Dashboard() {
 
       {/* Automation Rules */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-[10px] uppercase tracking-[0.15em] font-semibold" style={{ color: '#3a3a3a' }}>
+        <h2 className="section-label">
           Automation Flows
         </h2>
-        <Link href="/flows" className="text-[11px] transition-colors" style={{ color: '#4a4a4a' }}>
+        <Link href="/flows" className="text-[11px] transition-colors" style={{ color: '#444450' }}>
           Manage →
         </Link>
       </div>
@@ -176,10 +176,10 @@ export default async function Dashboard() {
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate" style={{ color: '#f0f0f0' }}>
+                  <div className="text-sm font-medium truncate" style={{ color: '#eaeaee' }}>
                     {account?.name ?? 'Unknown'}
                   </div>
-                  <div className="text-[11px] font-mono" style={{ color: '#555' }}>
+                  <div className="text-[11px] font-mono" style={{ color: '#444450' }}>
                     IG → {(rule.target_platforms as string[]).join(', ')}
                   </div>
                 </div>
@@ -188,7 +188,7 @@ export default async function Dashboard() {
                   style={
                     rule.enabled
                       ? { background: 'rgba(52,211,153,0.1)', color: '#34d399', border: '1px solid rgba(52,211,153,0.2)' }
-                      : { background: 'rgba(107,107,107,0.1)', color: '#6b6b6b', border: '1px solid rgba(107,107,107,0.2)' }
+                      : { background: 'rgba(92,92,106,0.1)', color: '#5c5c6a', border: '1px solid rgba(92,92,106,0.2)' }
                   }
                 >
                   {rule.enabled ? 'ON' : 'OFF'}
@@ -201,7 +201,7 @@ export default async function Dashboard() {
                 ))}
               </div>
 
-              <div className="text-[10px] font-mono" style={{ color: '#444' }}>
+              <div className="text-[10px] font-mono" style={{ color: '#333340' }}>
                 Checked {fmtDate(rule.last_checked_at)}
               </div>
             </div>
@@ -213,15 +213,15 @@ export default async function Dashboard() {
         >
           <div
             className="w-10 h-10 rounded-[10px] flex items-center justify-center mx-auto mb-3"
-            style={{ background: '#181818' }}
+            style={{ background: '#14141a' }}
           >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path d="M9 2v5M9 16v-5M2 9h5M16 9h-5" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
-              <circle cx="9" cy="9" r="2.5" stroke="#a78bfa" strokeWidth="1.5" opacity="0.7" />
+              <path d="M9 2v5M9 16v-5M2 9h5M16 9h-5" stroke="#2dd4bf" strokeWidth="1.5" strokeLinecap="round" opacity="0.5" />
+              <circle cx="9" cy="9" r="2.5" stroke="#2dd4bf" strokeWidth="1.5" opacity="0.7" />
             </svg>
           </div>
-          <p className="text-sm mb-2" style={{ color: '#4a4a4a' }}>No automation rules yet.</p>
-          <Link href="/flows" className="text-sm transition-colors" style={{ color: '#a78bfa' }}>
+          <p className="text-sm mb-2" style={{ color: '#444450' }}>No automation rules yet.</p>
+          <Link href="/flows" className="text-sm transition-colors" style={{ color: '#2dd4bf' }}>
             Create your first flow →
           </Link>
         </div>
@@ -229,10 +229,10 @@ export default async function Dashboard() {
 
       {/* Accounts grid */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-[10px] uppercase tracking-[0.15em] font-semibold" style={{ color: '#3a3a3a' }}>
+        <h2 className="section-label">
           Accounts
         </h2>
-        <Link href="/accounts" className="text-[11px] transition-colors" style={{ color: '#4a4a4a' }}>
+        <Link href="/accounts" className="text-[11px] transition-colors" style={{ color: '#444450' }}>
           Manage →
         </Link>
       </div>
@@ -253,15 +253,15 @@ export default async function Dashboard() {
         >
           <div
             className="w-10 h-10 rounded-[10px] flex items-center justify-center mx-auto mb-3"
-            style={{ background: '#181818' }}
+            style={{ background: '#14141a' }}
           >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <circle cx="9" cy="6" r="3.5" stroke="#333" strokeWidth="1.5" />
-              <path d="M2 16c0-3.866 3.134-6 7-6s7 2.134 7 6" stroke="#333" strokeWidth="1.5" strokeLinecap="round" />
+              <circle cx="9" cy="6" r="3.5" stroke="#333340" strokeWidth="1.5" />
+              <path d="M2 16c0-3.866 3.134-6 7-6s7 2.134 7 6" stroke="#333340" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </div>
-          <p className="text-sm mb-2" style={{ color: '#4a4a4a' }}>No accounts connected.</p>
-          <Link href="/accounts" className="text-sm transition-colors" style={{ color: '#a78bfa' }}>
+          <p className="text-sm mb-2" style={{ color: '#444450' }}>No accounts connected.</p>
+          <Link href="/accounts" className="text-sm transition-colors" style={{ color: '#2dd4bf' }}>
             Add your first account →
           </Link>
         </div>
@@ -269,10 +269,10 @@ export default async function Dashboard() {
 
       {/* Recent posts */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-[10px] uppercase tracking-[0.15em] font-semibold" style={{ color: '#3a3a3a' }}>
+        <h2 className="section-label">
           Recent Posts
         </h2>
-        <Link href="/history" className="text-[11px] transition-colors" style={{ color: '#4a4a4a' }}>
+        <Link href="/history" className="text-[11px] transition-colors" style={{ color: '#444450' }}>
           View all →
         </Link>
       </div>
@@ -283,12 +283,12 @@ export default async function Dashboard() {
         >
           <table className="w-full min-w-[500px]">
             <thead>
-              <tr style={{ borderBottom: '1px solid #181818' }}>
+              <tr style={{ borderBottom: '1px solid #16161e' }}>
                 {['Title', 'Account', 'Platforms', 'Status', 'Date'].map((h) => (
                   <th
                     key={h}
                     className="text-left text-[10px] uppercase tracking-[0.12em] font-medium px-4 py-3 first:pl-5"
-                    style={{ color: '#3a3a3a' }}
+                    style={{ color: '#333340' }}
                   >
                     {h}
                   </th>
@@ -302,17 +302,17 @@ export default async function Dashboard() {
                   <tr
                     key={post.id}
                     className="transition-colors"
-                    style={{ borderBottom: idx < recentPosts.length - 1 ? '1px solid #0f0f0f' : 'none' }}
+                    style={{ borderBottom: idx < recentPosts.length - 1 ? '1px solid #0d0d10' : 'none' }}
                   >
                     <td className="px-4 py-3.5 pl-5">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-medium truncate max-w-[160px] block" style={{ color: '#f0f0f0' }}>
+                        <span className="text-sm font-medium truncate max-w-[160px] block" style={{ color: '#eaeaee' }}>
                           {post.title}
                         </span>
                         {post.automation_rule_id && (
                           <span
                             className="text-[9px] px-1.5 py-0.5 rounded uppercase tracking-wider flex-shrink-0"
-                            style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa' }}
+                            style={{ background: 'rgba(45,212,191,0.08)', color: '#2dd4bf' }}
                           >
                             auto
                           </span>
@@ -328,10 +328,10 @@ export default async function Dashboard() {
                           >
                             {account.name[0].toUpperCase()}
                           </div>
-                          <span className="text-xs" style={{ color: '#6b6b6b' }}>{account.name}</span>
+                          <span className="text-xs" style={{ color: '#5c5c6a' }}>{account.name}</span>
                         </div>
                       ) : (
-                        <span className="text-xs" style={{ color: '#333' }}>—</span>
+                        <span className="text-xs" style={{ color: '#333340' }}>—</span>
                       )}
                     </td>
                     <td className="px-4 py-3.5">
@@ -340,7 +340,7 @@ export default async function Dashboard() {
                           <PlatformBadge key={p} platform={p} size="sm" />
                         ))}
                         {(post.platforms as string[]).length > 3 && (
-                          <span className="text-[10px]" style={{ color: '#4a4a4a' }}>
+                          <span className="text-[10px]" style={{ color: '#444450' }}>
                             +{(post.platforms as string[]).length - 3}
                           </span>
                         )}
@@ -350,7 +350,7 @@ export default async function Dashboard() {
                       <StatusBadge status={post.status} />
                     </td>
                     <td className="px-4 py-3.5">
-                      <span className="text-xs font-mono tabular-nums" style={{ color: '#4a4a4a' }}>
+                      <span className="text-xs font-mono tabular-nums" style={{ color: '#444450' }}>
                         {new Date(post.created_at).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
@@ -367,8 +367,8 @@ export default async function Dashboard() {
         <div
           className="glass-card rounded-[14px] p-10 text-center"
         >
-          <p className="text-sm mb-2" style={{ color: '#4a4a4a' }}>No posts yet.</p>
-          <Link href="/flows" className="text-sm transition-colors" style={{ color: '#a78bfa' }}>
+          <p className="text-sm mb-2" style={{ color: '#444450' }}>No posts yet.</p>
+          <Link href="/flows" className="text-sm transition-colors" style={{ color: '#2dd4bf' }}>
             Set up automation →
           </Link>
         </div>

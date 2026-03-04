@@ -48,10 +48,10 @@ export default function AccountCard({ account, postCount = 0 }: AccountCardProps
 
         {/* Post count */}
         <div className="text-right">
-          <div className="text-[22px] font-bold font-mono tabular-nums leading-none" style={{ color: '#f5f5f5' }}>
+          <div className="text-[22px] font-bold font-mono tabular-nums leading-none" style={{ color: '#eaeaee' }}>
             {postCount}
           </div>
-          <div className="text-[10px] uppercase tracking-widest mt-0.5" style={{ color: '#4a4a4a' }}>
+          <div className="text-[10px] uppercase tracking-widest mt-0.5" style={{ color: '#444450' }}>
             posts
           </div>
         </div>
@@ -59,10 +59,10 @@ export default function AccountCard({ account, postCount = 0 }: AccountCardProps
 
       {/* Info */}
       <div className="mb-3">
-        <h3 className="font-display font-semibold text-[14px] leading-tight" style={{ color: '#f5f5f5' }}>
+        <h3 className="font-display font-semibold text-[14px] leading-tight" style={{ color: '#eaeaee' }}>
           {account.name}
         </h3>
-        <p className="text-[11px] mt-0.5 font-mono" style={{ color: '#4a4a4a' }}>
+        <p className="text-[11px] mt-0.5 font-mono" style={{ color: '#444450' }}>
           @{account.username}
         </p>
       </div>
@@ -79,14 +79,14 @@ export default function AccountCard({ account, postCount = 0 }: AccountCardProps
         <Link
           href={`/history?accountId=${account.id}`}
           className="text-[11px] font-medium transition-colors"
-          style={{ color: '#4a4a4a' }}
+          style={{ color: '#444450' }}
         >
           History →
         </Link>
         <Link
           href={`/analytics?accountId=${account.id}`}
           className="text-[11px] font-medium transition-colors"
-          style={{ color: '#4a4a4a' }}
+          style={{ color: '#444450' }}
         >
           Analytics →
         </Link>
