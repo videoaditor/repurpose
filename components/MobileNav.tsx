@@ -17,14 +17,13 @@ const nav = [
     ),
   },
   {
-    href: '/automation',
-    label: 'Auto',
+    href: '/flows',
+    label: 'Flows',
     icon: (
       <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
-        <path d="M3 8a5 5 0 0 1 10 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-        <path d="M13 8a5 5 0 0 1-10 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeDasharray="2 2" />
-        <circle cx="8" cy="8" r="1.5" fill="currentColor" />
-        <path d="M8 3V1.5M13 8h1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        <rect x="1" y="5" width="4" height="6" rx="1.2" stroke="currentColor" strokeWidth="1.3" />
+        <rect x="11" y="5" width="4" height="6" rx="1.2" stroke="currentColor" strokeWidth="1.3" />
+        <path d="M5 8h6M9 6l2 2-2 2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
     primary: true,
@@ -59,8 +58,8 @@ export default function MobileNav() {
       className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-stretch"
       style={{
         height: '60px',
-        background: '#0a0a0a',
-        borderTop: '1px solid #1e1e1e',
+        background: '#08080a',
+        borderTop: '1px solid #18181e',
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >

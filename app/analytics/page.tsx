@@ -312,21 +312,22 @@ export default function AnalyticsPage() {
   ];
 
   const inputBg = {
-    background: '#111111',
-    border: '1px solid #1e1e1e',
+    background: 'rgba(14, 14, 18, 0.6)',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
     color: '#f5f5f5',
     borderRadius: '10px',
     padding: '8px 12px',
     fontSize: '13px',
     outline: 'none',
+    backdropFilter: 'blur(16px)',
   };
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto animate-fade-in">
       {/* Header row */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-2">
         <div>
-          <h1 className="font-display text-[22px] font-bold tracking-tight" style={{ color: '#f5f5f5' }}>
+          <h1 className="font-display text-[24px] font-bold tracking-tight" style={{ color: '#f0f0f0' }}>
             Analytics
           </h1>
           <p className="text-sm mt-0.5" style={{ color: '#6b6b6b' }}>
@@ -348,8 +349,7 @@ export default function AnalyticsPage() {
 
           {/* Time range */}
           <div
-            className="flex rounded-[10px] overflow-hidden"
-            style={{ border: '1px solid #1e1e1e', background: '#111111' }}
+            className="flex rounded-[10px] overflow-hidden glass-card"
           >
             {(['7d', '30d', '90d'] as const).map((r) => (
               <button
@@ -413,12 +413,11 @@ export default function AnalyticsPage() {
       ) : (
         <>
           {/* Metric cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6 stagger-children">
             {metricCards.map((card) => (
               <div
                 key={card.label}
-                className="rounded-[14px] p-5 stat-card transition-all duration-200"
-                style={{ background: '#111111', border: '1px solid #1e1e1e' }}
+                className="glass-card gradient-border rounded-[14px] p-5 stat-card"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div
@@ -442,8 +441,7 @@ export default function AnalyticsPage() {
           {/* YouTube section */}
           {ytData && (activePlatformTab === 'all' || activePlatformTab === 'youtube') && (
             <div
-              className="rounded-[14px] p-6 mb-6"
-              style={{ background: '#111111', border: '1px solid #1e1e1e' }}
+              className="glass-card gradient-border rounded-[14px] p-6 mb-6"
             >
               <div className="flex items-center gap-2 mb-5">
                 <div
@@ -546,7 +544,7 @@ export default function AnalyticsPage() {
                     key={platform}
                     className="rounded-[14px] p-5"
                     style={{
-                      background: '#111111',
+                      background: 'rgba(14, 14, 18, 0.6)',
                       border: '1px solid #1e1e1e',
                       borderLeft: `3px solid ${color}`,
                     }}
@@ -596,8 +594,7 @@ export default function AnalyticsPage() {
           {/* Platform breakdown table */}
           {data && Object.keys(data.platforms).length > 0 && (
             <div
-              className="rounded-[14px] overflow-hidden"
-              style={{ background: '#111111', border: '1px solid #1e1e1e' }}
+              className="glass-card rounded-[14px] overflow-hidden"
             >
               <div className="px-5 py-4" style={{ borderBottom: '1px solid #181818' }}>
                 <h3 className="font-display font-semibold text-[13px]" style={{ color: '#f5f5f5' }}>

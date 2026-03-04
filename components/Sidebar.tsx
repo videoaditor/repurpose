@@ -42,14 +42,13 @@ const nav = [
     ),
   },
   {
-    href: '/automation',
-    label: 'Automation',
+    href: '/flows',
+    label: 'Flows',
     icon: (
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <path d="M3 8a5 5 0 0 1 10 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-        <path d="M13 8a5 5 0 0 1-10 0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeDasharray="2 2" />
-        <circle cx="8" cy="8" r="1.5" fill="currentColor" />
-        <path d="M8 3V1.5M13 8h1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        <rect x="1" y="5" width="4" height="6" rx="1.2" stroke="currentColor" strokeWidth="1.3" />
+        <rect x="11" y="5" width="4" height="6" rx="1.2" stroke="currentColor" strokeWidth="1.3" />
+        <path d="M5 8h6M9 6l2 2-2 2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
   },
@@ -84,8 +83,8 @@ export default function Sidebar() {
       className="hidden md:flex fixed top-0 left-0 h-full flex-col z-40 transition-all duration-200"
       style={{
         width: collapsed ? '56px' : '220px',
-        background: '#0a0a0a',
-        borderRight: '1px solid #1a1a1a',
+        background: '#08080a',
+        borderRight: '1px solid #18181e',
       }}
     >
       {/* Logo */}
@@ -101,8 +100,8 @@ export default function Sidebar() {
         {!collapsed && (
           <div className="flex items-center gap-2.5">
             <div
-              className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)', boxShadow: '0 4px 12px rgba(167,139,250,0.3)' }}
+              className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 breathe-glow"
+              style={{ background: 'linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)' }}
             >
               <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
                 <path d="M2 4l5-3 5 3v6l-5 3-5-3V4z" stroke="white" strokeWidth="1.3" strokeLinejoin="round" />
@@ -116,8 +115,8 @@ export default function Sidebar() {
         )}
         {collapsed && (
           <div
-            className="w-6 h-6 rounded-lg flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)', boxShadow: '0 4px 12px rgba(167,139,250,0.3)' }}
+            className="w-6 h-6 rounded-lg flex items-center justify-center breathe-glow"
+            style={{ background: 'linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)' }}
           >
             <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
               <path d="M2 4l5-3 5 3v6l-5 3-5-3V4z" stroke="white" strokeWidth="1.3" strokeLinejoin="round" />
@@ -193,7 +192,7 @@ export default function Sidebar() {
       >
         {!collapsed ? (
           <>
-            <p className="text-[10px] font-mono" style={{ color: '#2a2a2a' }}>v1.0.0</p>
+            <p className="text-[10px] font-mono" style={{ color: '#2a2a2e' }}>v2.0.0</p>
             <button
               onClick={() => setCollapsed(false)}
               className="opacity-0 pointer-events-none"

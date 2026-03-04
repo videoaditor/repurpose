@@ -96,10 +96,9 @@ export default async function Dashboard() {
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-2">
         <div>
-          <h1 className="font-display text-[22px] font-bold tracking-tight" style={{ color: '#f5f5f5' }}>
+          <h1 className="font-display text-[24px] font-bold tracking-tight" style={{ color: '#f0f0f0' }}>
             Dashboard
           </h1>
           <p className="text-sm mt-0.5" style={{ color: '#6b6b6b' }}>
@@ -107,10 +106,10 @@ export default async function Dashboard() {
           </p>
         </div>
         <Link
-          href="/automation"
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-[10px] transition-all duration-150"
+          href="/flows"
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-[10px] transition-all duration-200"
           style={{
-            background: 'rgba(167,139,250,0.12)',
+            background: 'linear-gradient(135deg, rgba(167,139,250,0.15), rgba(96,165,250,0.08))',
             color: '#a78bfa',
             border: '1px solid rgba(167,139,250,0.2)',
           }}
@@ -118,23 +117,25 @@ export default async function Dashboard() {
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
             <path d="M6.5 1.5v10M1.5 6.5h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
           </svg>
-          New Rule
+          New Flow
         </Link>
       </div>
 
+      {/* Gradient accent line */}
+      <div className="gradient-accent mb-8" />
+
       {/* Hero stat row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 stagger-children">
         {heroStats.map((stat) => (
           <div
             key={stat.label}
-            className="stat-card rounded-[14px] p-5 transition-all duration-200"
-            style={{ background: '#111111', border: '1px solid #1e1e1e' }}
+            className="glass-card gradient-border stat-card rounded-[14px] p-5"
           >
             <div className="flex items-start justify-between mb-3">
               <div>
                 <div
                   className="text-[28px] font-bold font-mono leading-none tabular-nums"
-                  style={{ color: '#f5f5f5' }}
+                  style={{ color: '#f0f0f0' }}
                 >
                   {stat.value}
                 </div>
@@ -150,10 +151,10 @@ export default async function Dashboard() {
 
       {/* Automation Rules */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-[10px] uppercase tracking-[0.15em] font-semibold" style={{ color: '#333' }}>
-          Automation Rules
+        <h2 className="text-[10px] uppercase tracking-[0.15em] font-semibold" style={{ color: '#3a3a3a' }}>
+          Automation Flows
         </h2>
-        <Link href="/automation" className="text-[11px] transition-colors" style={{ color: '#4a4a4a' }}>
+        <Link href="/flows" className="text-[11px] transition-colors" style={{ color: '#4a4a4a' }}>
           Manage →
         </Link>
       </div>
@@ -163,20 +164,19 @@ export default async function Dashboard() {
           {rulesWithAccounts.map(({ rule, account }) => (
             <div
               key={rule.id}
-              className="rounded-[14px] p-4"
-              style={{ background: '#111111', border: '1px solid #1e1e1e' }}
+              className="glass-card gradient-border rounded-[14px] p-4"
             >
               <div className="flex items-center gap-2.5 mb-3">
                 {account && (
                   <div
                     className="w-8 h-8 rounded-[8px] flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
-                    style={{ backgroundColor: account.color }}
+                    style={{ backgroundColor: account.color, boxShadow: `0 0 8px ${account.color}40` }}
                   >
                     {account.name.slice(0, 2).toUpperCase()}
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate" style={{ color: '#f5f5f5' }}>
+                  <div className="text-sm font-medium truncate" style={{ color: '#f0f0f0' }}>
                     {account?.name ?? 'Unknown'}
                   </div>
                   <div className="text-[11px] font-mono" style={{ color: '#555' }}>
@@ -209,8 +209,7 @@ export default async function Dashboard() {
         </div>
       ) : (
         <div
-          className="rounded-[14px] p-10 text-center mb-10"
-          style={{ background: '#111111', border: '1px dashed #1e1e1e' }}
+          className="glass-card gradient-border rounded-[14px] p-10 text-center mb-10"
         >
           <div
             className="w-10 h-10 rounded-[10px] flex items-center justify-center mx-auto mb-3"
@@ -222,15 +221,15 @@ export default async function Dashboard() {
             </svg>
           </div>
           <p className="text-sm mb-2" style={{ color: '#4a4a4a' }}>No automation rules yet.</p>
-          <Link href="/automation" className="text-sm transition-colors" style={{ color: '#a78bfa' }}>
-            Create your first rule →
+          <Link href="/flows" className="text-sm transition-colors" style={{ color: '#a78bfa' }}>
+            Create your first flow →
           </Link>
         </div>
       )}
 
       {/* Accounts grid */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-[10px] uppercase tracking-[0.15em] font-semibold" style={{ color: '#333' }}>
+        <h2 className="text-[10px] uppercase tracking-[0.15em] font-semibold" style={{ color: '#3a3a3a' }}>
           Accounts
         </h2>
         <Link href="/accounts" className="text-[11px] transition-colors" style={{ color: '#4a4a4a' }}>
@@ -250,8 +249,7 @@ export default async function Dashboard() {
         </div>
       ) : (
         <div
-          className="rounded-[14px] p-10 text-center mb-10"
-          style={{ background: '#111111', border: '1px dashed #1e1e1e' }}
+          className="glass-card gradient-border rounded-[14px] p-10 text-center mb-10"
         >
           <div
             className="w-10 h-10 rounded-[10px] flex items-center justify-center mx-auto mb-3"
@@ -271,7 +269,7 @@ export default async function Dashboard() {
 
       {/* Recent posts */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-[10px] uppercase tracking-[0.15em] font-semibold" style={{ color: '#333' }}>
+        <h2 className="text-[10px] uppercase tracking-[0.15em] font-semibold" style={{ color: '#3a3a3a' }}>
           Recent Posts
         </h2>
         <Link href="/history" className="text-[11px] transition-colors" style={{ color: '#4a4a4a' }}>
@@ -281,8 +279,7 @@ export default async function Dashboard() {
 
       {recentPosts.length > 0 ? (
         <div
-          className="rounded-[14px] overflow-hidden overflow-x-auto"
-          style={{ background: '#111111', border: '1px solid #1e1e1e' }}
+          className="glass-card rounded-[14px] overflow-hidden overflow-x-auto"
         >
           <table className="w-full min-w-[500px]">
             <thead>
@@ -291,7 +288,7 @@ export default async function Dashboard() {
                   <th
                     key={h}
                     className="text-left text-[10px] uppercase tracking-[0.12em] font-medium px-4 py-3 first:pl-5"
-                    style={{ color: '#333' }}
+                    style={{ color: '#3a3a3a' }}
                   >
                     {h}
                   </th>
@@ -309,7 +306,7 @@ export default async function Dashboard() {
                   >
                     <td className="px-4 py-3.5 pl-5">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-medium truncate max-w-[160px] block" style={{ color: '#f5f5f5' }}>
+                        <span className="text-sm font-medium truncate max-w-[160px] block" style={{ color: '#f0f0f0' }}>
                           {post.title}
                         </span>
                         {post.automation_rule_id && (
@@ -368,11 +365,10 @@ export default async function Dashboard() {
         </div>
       ) : (
         <div
-          className="rounded-[14px] p-10 text-center"
-          style={{ background: '#111111', border: '1px dashed #1e1e1e' }}
+          className="glass-card rounded-[14px] p-10 text-center"
         >
           <p className="text-sm mb-2" style={{ color: '#4a4a4a' }}>No posts yet.</p>
-          <Link href="/automation" className="text-sm transition-colors" style={{ color: '#a78bfa' }}>
+          <Link href="/flows" className="text-sm transition-colors" style={{ color: '#a78bfa' }}>
             Set up automation →
           </Link>
         </div>

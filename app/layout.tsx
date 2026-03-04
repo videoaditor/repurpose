@@ -42,7 +42,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${syne.variable} ${dmSans.variable} antialiased`} style={{ background: '#080808', color: '#f5f5f5' }}>
+      <body className={`${syne.variable} ${dmSans.variable} antialiased noise-overlay`} style={{ background: '#060608', color: '#f5f5f5' }}>
         <div className="flex min-h-screen">
           <Sidebar />
           {/* On mobile: no left margin, padding-bottom for bottom nav. On md+: left margin for sidebar */}

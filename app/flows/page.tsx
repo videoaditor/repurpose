@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -9,16 +9,32 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
-interface FlowDef {
+/* ─── Types ─── */
+interface Account {
   id: number;
-  source: string;
-  destinations: string[];
-  trigger: string;
-  enabled: boolean;
-  lastRun: string | null;
-  createdAt: string;
+  name: string;
+  username: string;
+  color: string;
+  platforms: string[];
 }
 
+interface AutomationRule {
+  id: number;
+  account_id: number;
+  enabled: boolean;
+  source_platform: string;
+  target_platforms: string[];
+  last_checked_at: string | null;
+  last_reel_id: string | null;
+  created_at: string;
+}
+
+interface RuleWithAccount {
+  rule: AutomationRule;
+  account: Account | null;
+}
+
+/* ─── Constants ─── */
 const PLATFORM_COLORS: Record<string, string> = {
   tiktok: '#fe2c55',
   youtube: '#ff4444',
@@ -35,10 +51,25 @@ const PLATFORM_LABELS: Record<string, string> = {
   linkedin: 'LinkedIn',
 };
 
-const SOURCE_OPTIONS = ['youtube', 'tiktok', 'instagram'];
-const DEST_OPTIONS = ['tiktok', 'youtube', 'instagram', 'x', 'linkedin'];
+const TARGET_PLATFORMS = [
+  { id: 'youtube', label: 'YouTube' },
+  { id: 'tiktok', label: 'TikTok' },
+  { id: 'x', label: 'X' },
+  { id: 'linkedin', label: 'LinkedIn' },
+];
 
-function PlatformIcon({ platform }: { platform: string }) {
+function fmtDate(d: string | null | undefined) {
+  if (!d) return '—';
+  return new Date(d).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+/* ─── Platform icon component ─── */
+function PlatformIcon({ platform, size = 28 }: { platform: string; size?: number }) {
   const color = PLATFORM_COLORS[platform] ?? '#888';
   const icons: Record<string, React.ReactNode> = {
     youtube: (
@@ -71,360 +102,550 @@ function PlatformIcon({ platform }: { platform: string }) {
   };
   return (
     <div
-      className="w-7 h-7 rounded-[8px] flex items-center justify-center"
-      style={{ background: `${color}12`, border: `1px solid ${color}25` }}
+      className="rounded-[8px] flex items-center justify-center flex-shrink-0"
+      style={{
+        width: size,
+        height: size,
+        background: `${color}10`,
+        border: `1px solid ${color}20`,
+      }}
     >
       {icons[platform] ?? <span style={{ fontSize: 10, color }}>{platform[0].toUpperCase()}</span>}
     </div>
   );
 }
 
-function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean) => void }) {
+/* ─── New Flow dialog ─── */
+function NewFlowDialog({
+  accounts,
+  onSave,
+}: {
+  accounts: Account[];
+  onSave: (data: { account_id: string; target_platforms: string[]; enabled: boolean }) => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [accountId, setAccountId] = useState('');
+  const [targets, setTargets] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (accounts.length > 0 && !accountId) {
+      setAccountId(String(accounts[0].id));
+    }
+  }, [accounts, accountId]);
+
+  function toggleTarget(p: string) {
+    setTargets((prev) => (prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]));
+  }
+
+  async function handleSave() {
+    if (!accountId || targets.length === 0) {
+      setError('Select an account and at least one destination');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    try {
+      await onSave({ account_id: accountId, target_platforms: targets, enabled: true });
+      setTargets([]);
+      setOpen(false);
+    } catch {
+      setError('Failed to create flow');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
-    <button
-      onClick={() => onChange(!enabled)}
-      className="relative w-10 h-5 rounded-full transition-all duration-200 flex-shrink-0"
-      style={{
-        background: enabled ? 'rgba(167,139,250,0.3)' : '#1e1e1e',
-        border: `1px solid ${enabled ? 'rgba(167,139,250,0.4)' : '#2a2a2a'}`,
-      }}
-    >
-      <div
-        className="absolute top-0.5 w-4 h-4 rounded-full transition-all duration-200"
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button
+          className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-[10px] transition-all duration-200"
+          style={{
+            background: 'linear-gradient(135deg, rgba(167,139,250,0.15), rgba(96,165,250,0.08))',
+            color: '#a78bfa',
+            border: '1px solid rgba(167,139,250,0.2)',
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+          New Flow
+        </button>
+      </DialogTrigger>
+
+      <DialogContent
+        className="max-w-md"
         style={{
-          background: enabled ? '#a78bfa' : '#333',
-          left: enabled ? 'calc(100% - 18px)' : '2px',
-          boxShadow: enabled ? '0 0 8px rgba(167,139,250,0.4)' : 'none',
+          background: '#0e0e12',
+          border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: '16px',
+          color: '#f5f5f5',
+          backdropFilter: 'blur(24px)',
         }}
-      />
-    </button>
+      >
+        <DialogHeader>
+          <DialogTitle style={{ color: '#f5f5f5', fontSize: '16px', fontWeight: 700 }}>
+            Create New Flow
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-5 pt-3">
+          {/* Source */}
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: '#6b6b6b' }}>
+              Source Platform
+            </label>
+            <div
+              className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-[10px] text-sm"
+              style={{ background: '#0a0a0e', border: '1px solid #1c1c22', color: '#c13584' }}
+            >
+              <PlatformIcon platform="instagram" size={22} />
+              <span style={{ color: '#f5f5f5' }}>Instagram (Reels)</span>
+            </div>
+          </div>
+
+          {/* Account */}
+          <div>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: '#6b6b6b' }}>
+              Account
+            </label>
+            {accounts.length === 0 ? (
+              <p className="text-xs" style={{ color: '#555' }}>
+                No accounts found. <a href="/accounts" style={{ color: '#a78bfa' }}>Add one →</a>
+              </p>
+            ) : (
+              <select
+                value={accountId}
+                onChange={(e) => setAccountId(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-[10px] text-sm focus:outline-none"
+                style={{ background: '#0a0a0e', border: '1px solid #1c1c22', color: '#f5f5f5' }}
+              >
+                {accounts.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name} (@{a.username})
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {/* Destinations */}
+          <div>
+            <label className="block text-xs font-medium mb-2" style={{ color: '#6b6b6b' }}>
+              Destinations
+            </label>
+            <div className="space-y-1.5">
+              {TARGET_PLATFORMS.map((p) => {
+                const checked = targets.includes(p.id);
+                const color = PLATFORM_COLORS[p.id] ?? '#888';
+                return (
+                  <label
+                    key={p.id}
+                    className="flex items-center gap-3 p-3 rounded-[10px] cursor-pointer transition-all duration-150"
+                    style={{
+                      border: `1px solid ${checked ? `${color}30` : '#1c1c22'}`,
+                      background: checked ? `${color}06` : 'transparent',
+                    }}
+                  >
+                    <input type="checkbox" checked={checked} onChange={() => toggleTarget(p.id)} className="sr-only" />
+                    <div
+                      className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
+                      style={{
+                        background: checked ? color : 'transparent',
+                        border: `1.5px solid ${checked ? color : '#2a2a2e'}`,
+                      }}
+                    >
+                      {checked && (
+                        <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                          <path d="M1.5 4.5l2 2 4-4" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </div>
+                    <PlatformIcon platform={p.id} size={22} />
+                    <span className="text-sm" style={{ color: checked ? '#f5f5f5' : '#6b6b6b' }}>
+                      {p.label}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          {error && (
+            <p
+              className="text-xs px-3 py-2 rounded-[8px]"
+              style={{ color: '#ef4444', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.12)' }}
+            >
+              {error}
+            </p>
+          )}
+
+          <button
+            onClick={handleSave}
+            disabled={saving || accounts.length === 0 || targets.length === 0}
+            className="w-full py-2.5 text-sm font-semibold rounded-[10px] transition-all duration-200 disabled:opacity-30"
+            style={{
+              background: 'linear-gradient(135deg, rgba(167,139,250,0.18), rgba(96,165,250,0.10))',
+              color: '#a78bfa',
+              border: '1px solid rgba(167,139,250,0.25)',
+            }}
+          >
+            {saving ? 'Creating…' : 'Create Flow'}
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
-function NewFlowDialog({ onSave }: { onSave: (flow: Partial<FlowDef>) => void }) {
-  const [open, setOpen] = useState(false);
-  const [source, setSource] = useState('youtube');
-  const [destinations, setDestinations] = useState<string[]>(['tiktok', 'instagram']);
-  const [aiCaptions, setAiCaptions] = useState(true);
-  const [toast, setToast] = useState(false);
+/* ═══════════════════════════════════════════════════════════════
+   MAIN PAGE
+   ═══════════════════════════════════════════════════════════════ */
+export default function FlowsPage() {
+  const [rules, setRules] = useState<RuleWithAccount[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [triggeringId, setTriggeringId] = useState<number | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [manualFormId, setManualFormId] = useState<number | null>(null);
+  const [manualUrl, setManualUrl] = useState('');
 
-  function toggleDest(p: string) {
-    setDestinations((prev) =>
-      prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]
-    );
+  function showToast(message: string, type: 'success' | 'error' = 'success') {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
   }
 
-  function handleSave() {
-    onSave({ source, destinations, trigger: 'On new post', enabled: true });
-    setOpen(false);
-    setToast(true);
-    setTimeout(() => setToast(false), 3000);
+  const fetchRules = useCallback(async () => {
+    const res = await fetch('/api/automation');
+    const data = await res.json();
+    setRules(data);
+  }, []);
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/accounts').then((r) => r.json()),
+      fetch('/api/automation').then((r) => r.json()),
+    ]).then(([accs, rls]) => {
+      setAccounts(Array.isArray(accs) ? accs : []);
+      setRules(Array.isArray(rls) ? rls : []);
+      setLoading(false);
+    });
+  }, []);
+
+  async function handleCreate(data: { account_id: string; target_platforms: string[]; enabled: boolean }) {
+    const res = await fetch('/api/automation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed');
+    showToast('Flow created');
+    await fetchRules();
   }
 
-  const selectStyle = {
-    background: '#0d0d0d',
-    border: '1px solid #1e1e1e',
-    borderRadius: '10px',
-    padding: '10px 12px',
-    color: '#f5f5f5',
-    fontSize: '13px',
-    outline: 'none',
-    width: '100%',
-  };
+  async function handleToggle(rule: AutomationRule) {
+    const res = await fetch(`/api/automation/${rule.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled: !rule.enabled }),
+    });
+    if (res.ok) {
+      showToast(rule.enabled ? 'Flow paused' : 'Flow activated');
+      await fetchRules();
+    }
+  }
+
+  async function handleDelete(id: number) {
+    if (!confirm('Delete this flow?')) return;
+    await fetch(`/api/automation/${id}`, { method: 'DELETE' });
+    showToast('Flow deleted');
+    await fetchRules();
+  }
+
+  async function handleTrigger(rule: AutomationRule, reelUrl?: string) {
+    setTriggeringId(rule.id);
+    try {
+      const body = reelUrl ? { reel_url: reelUrl } : {};
+      const res = await fetch(`/api/automation/${rule.id}/trigger`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Trigger failed');
+      const posted = data.results?.filter((r: { status: string }) => r.status === 'posted').length ?? 0;
+      showToast(
+        data.processed > 0
+          ? `Processed ${data.processed} reel(s) — ${posted} posted`
+          : data.message || 'No new reels found'
+      );
+      setManualFormId(null);
+      setManualUrl('');
+      await fetchRules();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Trigger failed', 'error');
+    } finally {
+      setTriggeringId(null);
+    }
+  }
+
+  const enabledCount = rules.filter((r) => r.rule.enabled).length;
 
   return (
-    <>
+    <div className="p-4 md:p-8 max-w-5xl mx-auto animate-fade-in">
+      {/* Toast notification */}
       {toast && (
         <div
-          className="fixed bottom-6 right-6 z-50 px-4 py-3 rounded-[10px] text-sm font-medium animate-fade-in"
-          style={{ background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.25)', color: '#34d399' }}
+          className="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-[12px] text-sm font-medium animate-fade-in"
+          style={{
+            background: toast.type === 'success' ? 'rgba(52,211,153,0.10)' : 'rgba(239,68,68,0.10)',
+            border: `1px solid ${toast.type === 'success' ? 'rgba(52,211,153,0.20)' : 'rgba(239,68,68,0.20)'}`,
+            color: toast.type === 'success' ? '#34d399' : '#ef4444',
+            backdropFilter: 'blur(16px)',
+          }}
         >
-          ✓ Flow saved
+          {toast.type === 'success' ? '✓' : '✕'} {toast.message}
         </div>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <button
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-[10px] transition-all"
-            style={{
-              background: 'rgba(167,139,250,0.12)',
-              color: '#a78bfa',
-              border: '1px solid rgba(167,139,250,0.2)',
-            }}
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
-            New Flow
-          </button>
-        </DialogTrigger>
-
-        <DialogContent
-          className="max-w-md"
-          style={{ background: '#111111', border: '1px solid #1e1e1e', borderRadius: '14px', color: '#f5f5f5' }}
-        >
-          <DialogHeader>
-            <DialogTitle style={{ color: '#f5f5f5', fontSize: '15px' }}>Create New Flow</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-5 pt-2">
-            {/* Source */}
-            <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: '#6b6b6b' }}>Source Platform</label>
-              <select
-                value={source}
-                onChange={(e) => setSource(e.target.value)}
-                style={selectStyle}
-              >
-                {SOURCE_OPTIONS.map((p) => (
-                  <option key={p} value={p}>{PLATFORM_LABELS[p]}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Destinations */}
-            <div>
-              <label className="block text-xs font-medium mb-2" style={{ color: '#6b6b6b' }}>Destinations</label>
-              <div className="space-y-1.5">
-                {DEST_OPTIONS.filter((p) => p !== source).map((p) => {
-                  const checked = destinations.includes(p);
-                  return (
-                    <label
-                      key={p}
-                      className="flex items-center gap-3 p-2.5 rounded-[10px] cursor-pointer transition-all"
-                      style={{
-                        border: `1px solid ${checked ? 'rgba(167,139,250,0.2)' : '#181818'}`,
-                        background: checked ? 'rgba(167,139,250,0.04)' : 'transparent',
-                      }}
-                    >
-                      <input type="checkbox" checked={checked} onChange={() => toggleDest(p)} className="sr-only" />
-                      <div
-                        className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
-                        style={{
-                          background: checked ? '#a78bfa' : 'transparent',
-                          border: `1px solid ${checked ? '#a78bfa' : '#2a2a2a'}`,
-                        }}
-                      >
-                        {checked && (
-                          <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                            <path d="M1.5 4.5l2 2 4-4" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        )}
-                      </div>
-                      <span className="text-sm" style={{ color: checked ? '#f5f5f5' : '#6b6b6b' }}>
-                        {PLATFORM_LABELS[p]}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Trigger */}
-            <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: '#6b6b6b' }}>Trigger</label>
-              <div
-                className="px-3 py-2.5 rounded-[10px] text-sm"
-                style={{ background: '#0d0d0d', border: '1px solid #1e1e1e', color: '#6b6b6b' }}
-              >
-                On new post
-              </div>
-            </div>
-
-            {/* AI Captions toggle */}
-            <div
-              className="flex items-center justify-between p-3 rounded-[10px]"
-              style={{ background: '#0d0d0d', border: '1px solid #1e1e1e' }}
-            >
-              <div>
-                <div className="text-sm font-medium" style={{ color: '#f5f5f5' }}>AI Captions</div>
-                <div className="text-xs mt-0.5" style={{ color: '#4a4a4a' }}>Auto-generate platform captions</div>
-              </div>
-              <Toggle enabled={aiCaptions} onChange={setAiCaptions} />
-            </div>
-
-            {/* Save */}
-            <button
-              onClick={handleSave}
-              disabled={destinations.length === 0}
-              className="w-full py-2.5 text-sm font-medium rounded-[10px] transition-all"
-              style={{
-                background: destinations.length === 0 ? '#141414' : 'rgba(167,139,250,0.12)',
-                color: destinations.length === 0 ? '#333' : '#a78bfa',
-                border: `1px solid ${destinations.length === 0 ? '#1e1e1e' : 'rgba(167,139,250,0.2)'}`,
-                cursor: destinations.length === 0 ? 'not-allowed' : 'pointer',
-              }}
-            >
-              Save Flow
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
-
-const EXAMPLE_FLOW: FlowDef = {
-  id: 1,
-  source: 'youtube',
-  destinations: ['tiktok', 'instagram'],
-  trigger: 'New video published',
-  enabled: true,
-  lastRun: '2 hours ago',
-  createdAt: '2026-02-15',
-};
-
-export default function FlowsPage() {
-  const [flows, setFlows] = useState<FlowDef[]>([EXAMPLE_FLOW]);
-
-  function addFlow(partial: Partial<FlowDef>) {
-    const newFlow: FlowDef = {
-      id: Date.now(),
-      source: partial.source ?? 'youtube',
-      destinations: partial.destinations ?? [],
-      trigger: partial.trigger ?? 'On new post',
-      enabled: partial.enabled ?? true,
-      lastRun: null,
-      createdAt: new Date().toISOString().slice(0, 10),
-    };
-    setFlows((prev) => [...prev, newFlow]);
-  }
-
-  function toggleFlow(id: number) {
-    setFlows((prev) =>
-      prev.map((f) => (f.id === id ? { ...f, enabled: !f.enabled } : f))
-    );
-  }
-
-  function deleteFlow(id: number) {
-    setFlows((prev) => prev.filter((f) => f.id !== id));
-  }
-
-  return (
-    <div className="p-8 max-w-4xl mx-auto animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-2">
         <div>
-          <h1 className="font-display text-[22px] font-bold tracking-tight" style={{ color: '#f5f5f5' }}>
+          <h1 className="font-display text-[24px] font-bold tracking-tight" style={{ color: '#f0f0f0' }}>
             Flows
           </h1>
           <p className="text-sm mt-0.5" style={{ color: '#6b6b6b' }}>
-            Automate your content repurposing
+            Automate your content repurposing across platforms
           </p>
         </div>
-        <NewFlowDialog onSave={addFlow} />
+        <NewFlowDialog accounts={accounts} onSave={handleCreate} />
+      </div>
+
+      {/* Gradient accent line */}
+      <div className="gradient-accent mb-8" />
+
+      {/* Stats strip */}
+      <div
+        className="glass-card rounded-[12px] px-5 py-3 flex items-center gap-6 mb-8 text-xs"
+      >
+        <div className="flex items-center gap-2">
+          <div
+            className="w-2 h-2 rounded-full pulse-dot"
+            style={{ background: enabledCount > 0 ? '#34d399' : '#333' }}
+          />
+          <span style={{ color: '#6b6b6b' }}>
+            <span style={{ color: '#f5f5f5', fontWeight: 600 }}>{enabledCount}</span> active flow{enabledCount !== 1 ? 's' : ''}
+          </span>
+        </div>
+        <div style={{ width: 1, height: 16, background: '#1c1c22' }} />
+        <span style={{ color: '#6b6b6b' }}>
+          <span style={{ color: '#f5f5f5', fontWeight: 600 }}>{rules.length}</span> total
+        </span>
+        <div style={{ width: 1, height: 16, background: '#1c1c22' }} />
+        <span style={{ color: '#6b6b6b' }}>
+          Polling every <span style={{ color: '#a78bfa', fontWeight: 600 }}>15 min</span>
+        </span>
       </div>
 
       {/* Flows list */}
-      {flows.length === 0 ? (
+      {loading ? (
+        <div className="space-y-4">
+          {[1, 2].map((i) => (
+            <div key={i} className="h-32 rounded-[16px] shimmer" style={{ border: '1px solid #1c1c22' }} />
+          ))}
+        </div>
+      ) : rules.length === 0 ? (
         <div
-          className="rounded-[14px] p-16 text-center"
-          style={{ background: '#111111', border: '1px dashed #1e1e1e' }}
+          className="glass-card gradient-border rounded-[16px] p-16 text-center"
         >
           <div
-            className="w-14 h-14 rounded-[14px] flex items-center justify-center mx-auto mb-5"
-            style={{ background: '#181818', border: '1px solid #1e1e1e' }}
+            className="w-16 h-16 rounded-[16px] flex items-center justify-center mx-auto mb-5"
+            style={{ background: 'rgba(167,139,250,0.06)', border: '1px solid rgba(167,139,250,0.12)' }}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <rect x="2" y="8" width="7" height="8" rx="2" stroke="#2a2a2a" strokeWidth="1.5" />
-              <rect x="15" y="8" width="7" height="8" rx="2" stroke="#2a2a2a" strokeWidth="1.5" />
-              <path d="M9 12h6M12 10l2 2-2 2" stroke="#2a2a2a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <rect x="2" y="8" width="7" height="8" rx="2" stroke="#a78bfa" strokeWidth="1.5" opacity="0.6" />
+              <rect x="15" y="8" width="7" height="8" rx="2" stroke="#a78bfa" strokeWidth="1.5" opacity="0.6" />
+              <path d="M9 12h6M12 10l2 2-2 2" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <h3 className="font-display font-semibold text-[15px] mb-2" style={{ color: '#f5f5f5' }}>
+          <h3 className="font-display font-bold text-[17px] mb-2" style={{ color: '#f0f0f0' }}>
             Automate your repurposing
           </h3>
-          <p className="text-sm mb-6" style={{ color: '#4a4a4a' }}>
-            Create your first flow to automatically cross-post content
+          <p className="text-sm mb-6 max-w-xs mx-auto" style={{ color: '#4a4a4a' }}>
+            Create your first flow to automatically cross-post new Instagram Reels to YouTube, TikTok, and more
           </p>
-          <NewFlowDialog onSave={addFlow} />
+          <NewFlowDialog accounts={accounts} onSave={handleCreate} />
         </div>
       ) : (
-        <div className="space-y-3">
-          {flows.map((flow) => (
+        <div className="space-y-4 stagger-children">
+          {rules.map(({ rule, account }) => (
             <div
-              key={flow.id}
-              className="rounded-[14px] p-5 transition-all duration-200 card-hover"
-              style={{ background: '#111111', border: '1px solid #1e1e1e' }}
+              key={rule.id}
+              className="glass-card gradient-border rounded-[16px] p-5 transition-all duration-200"
             >
+              {/* Flow header: source → pipe → destinations + toggle */}
               <div className="flex items-center gap-4">
-                {/* Source → Destinations */}
-                <div className="flex items-center gap-3 flex-1">
-                  {/* Source */}
-                  <div className="flex items-center gap-2">
-                    <PlatformIcon platform={flow.source} />
-                    <span className="text-[13px] font-medium" style={{ color: '#f5f5f5' }}>
-                      {PLATFORM_LABELS[flow.source] ?? flow.source}
-                    </span>
-                  </div>
-
-                  {/* Arrow */}
-                  <div className="flex items-center gap-2 px-2">
-                    <div className="h-px flex-1 min-w-[24px]" style={{ background: 'linear-gradient(to right, #2a2a2a, #a78bfa50)' }} />
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <path d="M3 7h8M8 4l3 3-3 3" stroke="#a78bfa" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-
-                  {/* Destinations */}
-                  <div className="flex items-center gap-1.5">
-                    {flow.destinations.map((dest) => (
-                      <PlatformIcon key={dest} platform={dest} />
-                    ))}
-                    <span className="text-[12px] ml-1" style={{ color: '#6b6b6b' }}>
-                      {flow.destinations.map((d) => PLATFORM_LABELS[d] ?? d).join(' + ')}
-                    </span>
+                {/* Source */}
+                <div className="flex items-center gap-2.5">
+                  <PlatformIcon platform={rule.source_platform} size={32} />
+                  <div>
+                    <div className="text-[13px] font-semibold" style={{ color: '#f0f0f0' }}>
+                      {account?.name ?? 'Unknown'}
+                    </div>
+                    <div className="text-[11px] font-mono" style={{ color: '#555' }}>
+                      @{account?.username ?? '?'}
+                    </div>
                   </div>
                 </div>
 
-                {/* Meta */}
-                <div className="flex items-center gap-5">
-                  <div>
-                    <div className="text-[11px] font-medium" style={{ color: '#f5f5f5' }}>
-                      {flow.trigger}
-                    </div>
-                    <div className="text-[10px] mt-0.5" style={{ color: '#4a4a4a' }}>
-                      {flow.lastRun ? `Last run: ${flow.lastRun}` : 'Never run'}
-                    </div>
-                  </div>
+                {/* Animated flow pipe */}
+                <div className="flex items-center gap-2 flex-1 min-w-[60px]">
+                  <div className={`flex-1 rounded-full ${rule.enabled ? 'flow-pipe' : 'flow-pipe-off'}`} />
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ opacity: rule.enabled ? 1 : 0.3 }}>
+                    <path d="M4 8h8M9 5l3 3-3 3" stroke="#a78bfa" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
 
-                  {/* Toggle */}
-                  <div className="flex flex-col items-center gap-1">
-                    <Toggle enabled={flow.enabled} onChange={() => toggleFlow(flow.id)} />
-                    <span className="text-[9px] uppercase tracking-wider" style={{ color: flow.enabled ? '#34d399' : '#333' }}>
-                      {flow.enabled ? 'On' : 'Off'}
-                    </span>
-                  </div>
+                {/* Destinations */}
+                <div className="flex items-center gap-1.5">
+                  {(rule.target_platforms as string[]).map((p) => (
+                    <PlatformIcon key={p} platform={p} size={32} />
+                  ))}
+                </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      className="p-1.5 rounded-[8px] transition-all"
-                      style={{ background: 'transparent', color: '#333' }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#6b6b6b'; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#333'; }}
-                      title="Edit"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <path d="M9.5 2.5l2 2-7 7H2.5v-2l7-7z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => deleteFlow(flow.id)}
-                      className="p-1.5 rounded-[8px] transition-all"
-                      style={{ background: 'transparent', color: '#333' }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#ef4444'; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = '#333'; }}
-                      title="Delete"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <path d="M2 3.5h10M5 3.5V2.5a.5.5 0 01.5-.5h3a.5.5 0 01.5.5v1M5.5 6v4M8.5 6v4M3 3.5l.7 7.5a.5.5 0 00.5.5h5.6a.5.5 0 00.5-.5l.7-7.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                      </svg>
-                    </button>
-                  </div>
+                {/* Toggle + status */}
+                <div className="flex flex-col items-center gap-1 ml-3">
+                  <button
+                    onClick={() => handleToggle(rule)}
+                    className={`toggle-track ${rule.enabled ? 'on' : 'off'}`}
+                    title={rule.enabled ? 'Pause flow' : 'Activate flow'}
+                  >
+                    <div className="toggle-thumb" />
+                  </button>
+                  <span
+                    className="text-[9px] uppercase tracking-wider font-semibold"
+                    style={{ color: rule.enabled ? '#34d399' : '#3a3a3a' }}
+                  >
+                    {rule.enabled ? 'Live' : 'Off'}
+                  </span>
                 </div>
               </div>
+
+              {/* Meta row */}
+              <div className="flex items-center gap-5 mt-4 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                <div>
+                  <div className="text-[9px] uppercase tracking-wider mb-0.5 font-medium" style={{ color: '#3a3a3a' }}>
+                    Last Checked
+                  </div>
+                  <div className="text-[11px] font-mono" style={{ color: '#6b6b6b' }}>
+                    {fmtDate(rule.last_checked_at)}
+                  </div>
+                </div>
+                {rule.last_reel_id && (
+                  <div>
+                    <div className="text-[9px] uppercase tracking-wider mb-0.5 font-medium" style={{ color: '#3a3a3a' }}>
+                      Last Reel
+                    </div>
+                    <div className="text-[11px] font-mono truncate max-w-[120px]" style={{ color: '#6b6b6b' }}>
+                      {rule.last_reel_id}
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <div className="text-[9px] uppercase tracking-wider mb-0.5 font-medium" style={{ color: '#3a3a3a' }}>
+                    Route
+                  </div>
+                  <div className="text-[11px]" style={{ color: '#6b6b6b' }}>
+                    IG → {(rule.target_platforms as string[]).map((p) => PLATFORM_LABELS[p] ?? p).join(' + ')}
+                  </div>
+                </div>
+
+                {/* Spacer */}
+                <div className="flex-1" />
+
+                {/* Actions */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleTrigger(rule)}
+                    disabled={triggeringId === rule.id}
+                    className="px-3.5 py-1.5 rounded-[8px] text-xs font-medium transition-all duration-200 disabled:opacity-30"
+                    style={{
+                      background: 'rgba(167,139,250,0.06)',
+                      color: '#a78bfa',
+                      border: '1px solid rgba(167,139,250,0.12)',
+                    }}
+                  >
+                    {triggeringId === rule.id ? (
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-3 h-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                        Checking…
+                      </span>
+                    ) : (
+                      'Check Now'
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setManualFormId(manualFormId === rule.id ? null : rule.id)}
+                    className="px-3.5 py-1.5 rounded-[8px] text-xs font-medium transition-all duration-200"
+                    style={{
+                      background: 'rgba(52,211,153,0.04)',
+                      color: '#34d399',
+                      border: '1px solid rgba(52,211,153,0.10)',
+                    }}
+                  >
+                    Post URL
+                  </button>
+                  <button
+                    onClick={() => handleDelete(rule.id)}
+                    className="w-7 h-7 rounded-[8px] flex items-center justify-center transition-all duration-200"
+                    style={{ color: '#3a3a3a', border: '1px solid #1c1c22' }}
+                    title="Delete flow"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                      <path
+                        d="M2 3.5h10M5 3.5V2.5a1 1 0 011-1h2a1 1 0 011 1v1M5.5 6v5M8.5 6v5M3.5 3.5l.5 8.5h6l.5-8.5"
+                        stroke="currentColor"
+                        strokeWidth="1.3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Manual URL form */}
+              {manualFormId === rule.id && (
+                <div className="mt-3 pt-3 animate-fade-in" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                  <p className="text-[11px] mb-2" style={{ color: '#555' }}>
+                    Paste an Instagram Reel URL to manually crosspost:
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={manualUrl}
+                      onChange={(e) => setManualUrl(e.target.value)}
+                      placeholder="https://www.instagram.com/reel/..."
+                      className="flex-1 px-3 py-2 rounded-[8px] text-xs focus:outline-none"
+                      style={{ background: '#0a0a0e', border: '1px solid #1c1c22', color: '#f5f5f5' }}
+                    />
+                    <button
+                      onClick={() => manualUrl && handleTrigger(rule, manualUrl)}
+                      disabled={!manualUrl || triggeringId === rule.id}
+                      className="px-4 py-2 rounded-[8px] text-xs font-medium disabled:opacity-30"
+                      style={{
+                        background: 'rgba(52,211,153,0.08)',
+                        color: '#34d399',
+                        border: '1px solid rgba(52,211,153,0.15)',
+                      }}
+                    >
+                      Post
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -432,15 +653,15 @@ export default function FlowsPage() {
 
       {/* Info strip */}
       <div
-        className="mt-6 rounded-[10px] px-4 py-3 flex items-center gap-3 text-xs"
-        style={{ background: '#0d0d0d', border: '1px solid #1a1a1a' }}
+        className="glass-card mt-8 rounded-[12px] px-4 py-3 flex items-center gap-3 text-xs"
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="flex-shrink-0">
           <circle cx="7" cy="7" r="6" stroke="#4a4a4a" strokeWidth="1.3" />
           <path d="M7 6v4M7 4.5h.01" stroke="#4a4a4a" strokeWidth="1.3" strokeLinecap="round" />
         </svg>
         <span style={{ color: '#4a4a4a' }}>
-          Flows automatically cross-post new content. Full automation backend coming soon — flows are saved locally for now.
+          Flows poll for new Instagram Reels every 15 minutes. Toggle a flow ON to activate real-time automation, or use
+          &ldquo;Check Now&rdquo; to trigger manually.
         </span>
       </div>
     </div>
