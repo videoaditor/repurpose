@@ -9,7 +9,7 @@ const http = require('http');
 const { execSync } = require('child_process');
 const crypto = require('crypto');
 
-const PORT = 3031;
+const PORT = 3020;
 const SECRET = 'repurpose-deploy-2026';
 const PROJECT_DIR = '/Users/player/clawd/projects/repurpose';
 
