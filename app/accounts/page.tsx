@@ -3,15 +3,13 @@
 import { useState, useEffect } from 'react';
 import PlatformBadge from '@/components/PlatformBadge';
 
-const PRESET_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
-
-const ALL_PLATFORMS = [
-  { id: 'tiktok', label: 'TikTok', icon: '🎵' },
-  { id: 'youtube', label: 'YouTube', icon: '▶' },
-  { id: 'instagram', label: 'Instagram', icon: '◈' },
-  { id: 'x', label: 'X', icon: '✕' },
-  { id: 'linkedin', label: 'LinkedIn', icon: 'in' },
-];
+const PLATFORM_META: Record<string, { label: string; icon: string; color: string }> = {
+  tiktok: { label: 'TikTok', icon: '🎵', color: '#fe2c55' },
+  youtube: { label: 'YouTube', icon: '▶', color: '#ff4444' },
+  instagram: { label: 'Instagram', icon: '◈', color: '#c13584' },
+  x: { label: 'X', icon: '✕', color: '#c8c8c8' },
+  linkedin: { label: 'LinkedIn', icon: 'in', color: '#0a9bcf' },
+};
 
 interface Account {
   id: number;
@@ -19,264 +17,321 @@ interface Account {
   username: string;
   color: string;
   platforms: string[];
+  connected_platforms?: string[];
   created_at: string;
 }
 
 export default function AccountsPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({
-    name: '',
-    username: '',
-    api_key: '',
-    color: PRESET_COLORS[0],
-    platforms: [] as string[],
-  });
-  const [error, setError] = useState('');
+  const [syncing, setSyncing] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [syncResult, setSyncResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [showKeyInput, setShowKeyInput] = useState(false);
 
-  useEffect(() => {
-    fetchAccounts();
-  }, []);
+  useEffect(() => { fetchAccounts(); }, []);
 
   async function fetchAccounts() {
     try {
       const res = await fetch('/api/accounts');
       const data = await res.json();
       setAccounts(data);
-    } catch {
-      setError('Failed to load accounts');
-    } finally {
+    } catch { /* ignore */ } finally {
       setLoading(false);
     }
   }
 
-  function togglePlatform(id: string) {
-    setForm((f) => ({
-      ...f,
-      platforms: f.platforms.includes(id)
-        ? f.platforms.filter((p) => p !== id)
-        : [...f.platforms, id],
-    }));
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError('');
-
-    if (!form.name || !form.username || !form.api_key) {
-      setError('Name, username, and API key are required');
-      return;
-    }
-    if (form.platforms.length === 0) {
-      setError('Select at least one platform');
+  async function handleSync() {
+    if (!apiKey.trim()) {
+      setSyncResult({ type: 'error', message: 'Please enter your Upload-Post API key' });
       return;
     }
 
-    setSubmitting(true);
+    setSyncing(true);
+    setSyncResult(null);
+
     try {
-      const res = await fetch('/api/accounts', {
+      const res = await fetch('/api/accounts/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ api_key: apiKey.trim() }),
       });
-      if (!res.ok) throw new Error('Failed to create account');
-      setForm({ name: '', username: '', api_key: '', color: PRESET_COLORS[0], platforms: [] });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setSyncResult({ type: 'error', message: data.error || 'Sync failed' });
+        return;
+      }
+
+      const created = data.synced.filter((s: { action: string }) => s.action === 'created').length;
+      const updated = data.synced.filter((s: { action: string }) => s.action === 'updated').length;
+      const parts = [];
+      if (created) parts.push(`${created} added`);
+      if (updated) parts.push(`${updated} updated`);
+
+      setSyncResult({
+        type: 'success',
+        message: `Synced! ${parts.join(', ')} — ${data.plan} plan (${data.email})`,
+      });
+      setShowKeyInput(false);
       await fetchAccounts();
     } catch {
-      setError('Failed to create account. Check your details.');
+      setSyncResult({ type: 'error', message: 'Could not reach the server' });
     } finally {
-      setSubmitting(false);
+      setSyncing(false);
     }
   }
 
   async function handleDelete(id: number) {
-    if (!confirm('Delete this account? This cannot be undone.')) return;
+    if (!confirm('Remove this account?')) return;
     try {
       await fetch(`/api/accounts/${id}`, { method: 'DELETE' });
       setAccounts((prev) => prev.filter((a) => a.id !== id));
-    } catch {
-      setError('Failed to delete account');
-    }
+    } catch { /* ignore */ }
   }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto animate-fade-in">
-      <div className="mb-8">
-        <h1 className="font-display text-2xl font-bold text-white tracking-tight">Accounts</h1>
-        <p className="text-sm text-[#555] mt-0.5">Connect your Upload-Post profiles</p>
+    <div className="p-4 md:p-8 max-w-4xl mx-auto animate-fade-in">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-2">
+        <div>
+          <h1 className="font-display text-[24px] font-bold tracking-tight" style={{ color: '#f0f0f0' }}>
+            Accounts
+          </h1>
+          <p className="text-sm mt-0.5" style={{ color: '#6b6b6b' }}>
+            Auto-synced from your Upload-Post profiles
+          </p>
+        </div>
+        <button
+          onClick={() => setShowKeyInput(!showKeyInput)}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-[10px] transition-all duration-200"
+          style={{
+            background: 'linear-gradient(135deg, rgba(167,139,250,0.15), rgba(96,165,250,0.08))',
+            color: '#a78bfa',
+            border: '1px solid rgba(167,139,250,0.2)',
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M1 7h3m6 0h3M7 1v3m0 6v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <circle cx="7" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
+          {accounts.length > 0 ? 'Re-sync' : 'Connect'}
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Add account form */}
-        <div className="lg:col-span-2">
-          <div className="bg-[#111] border border-[#1e1e1e] rounded-xl p-5">
-            <h2 className="font-display font-semibold text-white text-sm mb-4">Add Account</h2>
+      <div className="gradient-accent mb-6" />
 
-            <p className="text-[11px] text-[#555] mb-4 leading-relaxed border border-[#1a1a1a] rounded-lg p-2.5 bg-[#0f0f0f]">
-              Connect platforms at{' '}
-              <span className="text-indigo-400">upload-post.com</span>{' '}
-              first, then add your profile here.
-            </p>
-
-            <form onSubmit={handleSubmit} className="space-y-3.5">
-              {/* Name */}
-              <div>
-                <label className="block text-xs text-[#888] mb-1.5 font-medium">Account Name</label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  placeholder="My Brand"
-                  className="w-full bg-[#0f0f0f] border border-[#1e1e1e] rounded-lg px-3 py-2 text-sm text-white placeholder-[#444] focus:outline-none focus:border-indigo-500/50 transition-colors"
-                />
-              </div>
-
-              {/* Username */}
-              <div>
-                <label className="block text-xs text-[#888] mb-1.5 font-medium">Upload-Post Username</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#444] text-sm">@</span>
-                  <input
-                    type="text"
-                    value={form.username}
-                    onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
-                    placeholder="username"
-                    className="w-full bg-[#0f0f0f] border border-[#1e1e1e] rounded-lg pl-7 pr-3 py-2 text-sm text-white placeholder-[#444] focus:outline-none focus:border-indigo-500/50 transition-colors"
-                  />
-                </div>
-              </div>
-
-              {/* API Key */}
-              <div>
-                <label className="block text-xs text-[#888] mb-1.5 font-medium">API Key</label>
-                <input
-                  type="password"
-                  value={form.api_key}
-                  onChange={(e) => setForm((f) => ({ ...f, api_key: e.target.value }))}
-                  placeholder="••••••••••••••••"
-                  className="w-full bg-[#0f0f0f] border border-[#1e1e1e] rounded-lg px-3 py-2 text-sm text-white placeholder-[#444] focus:outline-none focus:border-indigo-500/50 transition-colors font-mono"
-                />
-              </div>
-
-              {/* Color */}
-              <div>
-                <label className="block text-xs text-[#888] mb-1.5 font-medium">Color</label>
-                <div className="flex gap-2">
-                  {PRESET_COLORS.map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => setForm((f) => ({ ...f, color }))}
-                      className="w-7 h-7 rounded-lg transition-all duration-150"
-                      style={{
-                        backgroundColor: color,
-                        boxShadow: form.color === color ? `0 0 0 2px #0a0a0a, 0 0 0 4px ${color}` : 'none',
-                        transform: form.color === color ? 'scale(1.1)' : 'scale(1)',
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Platforms */}
-              <div>
-                <label className="block text-xs text-[#888] mb-1.5 font-medium">Platforms</label>
-                <div className="flex flex-wrap gap-1.5">
-                  {ALL_PLATFORMS.map((p) => {
-                    const selected = form.platforms.includes(p.id);
-                    return (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => togglePlatform(p.id)}
-                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all duration-150 ${
-                          selected
-                            ? 'border-indigo-500/50 bg-indigo-500/10 text-indigo-300'
-                            : 'border-[#1e1e1e] bg-[#0f0f0f] text-[#555] hover:text-[#888] hover:border-[#2a2a2a]'
-                        }`}
-                      >
-                        <span>{p.icon}</span>
-                        {p.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {error && (
-                <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
-                  {error}
-                </p>
-              )}
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full py-2.5 bg-indigo-500 hover:bg-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-xl transition-colors shadow-lg shadow-indigo-500/20"
-              >
-                {submitting ? 'Adding...' : 'Add Account'}
-              </button>
-            </form>
+      {/* Sync panel */}
+      {showKeyInput && (
+        <div className="glass-card gradient-border rounded-[14px] p-5 mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <div
+              className="w-7 h-7 rounded-[8px] flex items-center justify-center"
+              style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.2)' }}
+            >
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                <path d="M7 1v12M1 7h12" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </div>
+            <h2 className="font-display font-semibold text-[13px]" style={{ color: '#f0f0f0' }}>
+              Sync from Upload-Post
+            </h2>
           </div>
+
+          <p className="text-[12px] mb-4" style={{ color: '#6b6b6b' }}>
+            Paste your Upload-Post API key below. We'll auto-discover all your profiles
+            and their connected platforms — no manual setup needed.
+          </p>
+
+          <div className="flex gap-3">
+            <input
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSync()}
+              placeholder="Paste your Upload-Post API key"
+              className="flex-1 rounded-[10px] px-4 py-2.5 text-sm font-mono transition-colors focus:outline-none"
+              style={{
+                background: 'rgba(14, 14, 18, 0.6)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                color: '#f0f0f0',
+                backdropFilter: 'blur(16px)',
+              }}
+            />
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="px-5 py-2.5 rounded-[10px] text-sm font-semibold transition-all duration-200 disabled:opacity-50"
+              style={{
+                background: 'linear-gradient(135deg, #a78bfa, #7c3aed)',
+                color: '#fff',
+                boxShadow: '0 4px 14px rgba(124, 58, 237, 0.3)',
+              }}
+            >
+              {syncing ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" opacity="0.25" />
+                    <path d="M12 2a10 10 0 019.8 8" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+                  </svg>
+                  Syncing…
+                </span>
+              ) : 'Sync Accounts'}
+            </button>
+          </div>
+
+          <p className="text-[11px] mt-3" style={{ color: '#4a4a4a' }}>
+            Get your API key at{' '}
+            <a
+              href="https://app.upload-post.com/api-keys"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="transition-colors"
+              style={{ color: '#a78bfa' }}
+            >
+              app.upload-post.com/api-keys ↗
+            </a>
+          </p>
         </div>
+      )}
 
-        {/* Accounts list */}
-        <div className="lg:col-span-3">
-          <h2 className="font-display font-semibold text-[#888] text-xs uppercase tracking-widest mb-3">
-            Connected Accounts
-          </h2>
+      {/* Sync result toast */}
+      {syncResult && (
+        <div
+          className="rounded-[10px] px-4 py-3 mb-6 text-xs flex items-center justify-between"
+          style={{
+            background: syncResult.type === 'success'
+              ? 'rgba(52,211,153,0.06)'
+              : 'rgba(251,146,60,0.06)',
+            border: `1px solid ${syncResult.type === 'success'
+              ? 'rgba(52,211,153,0.15)'
+              : 'rgba(251,146,60,0.15)'}`,
+            color: syncResult.type === 'success' ? '#34d399' : '#fb923c',
+          }}
+        >
+          {syncResult.message}
+          <button
+            onClick={() => setSyncResult(null)}
+            className="ml-3 opacity-50 hover:opacity-100 transition-opacity"
+          >✕</button>
+        </div>
+      )}
 
-          {loading ? (
-            <div className="space-y-3">
-              {[1, 2].map((i) => (
-                <div key={i} className="bg-[#111] border border-[#1e1e1e] rounded-xl p-4 animate-pulse h-24" />
-              ))}
-            </div>
-          ) : accounts.length === 0 ? (
-            <div className="bg-[#111] border border-[#1e1e1e] border-dashed rounded-xl p-8 text-center">
-              <p className="text-[#555] text-sm">No accounts added yet.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {accounts.map((account) => (
-                <div
-                  key={account.id}
-                  className="bg-[#111] border border-[#1e1e1e] rounded-xl p-4 flex items-center gap-4 hover:border-[#2a2a2a] transition-colors"
-                >
+      {/* Accounts grid */}
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="glass-card rounded-[14px] shimmer" style={{ height: '140px' }} />
+          ))}
+        </div>
+      ) : accounts.length === 0 ? (
+        <div className="glass-card gradient-border rounded-[14px] p-12 text-center">
+          <div
+            className="w-14 h-14 rounded-[12px] flex items-center justify-center mx-auto mb-4"
+            style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.15)' }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="8" r="4" stroke="#a78bfa" strokeWidth="1.5" opacity="0.6" />
+              <path d="M4 20c0-4.418 3.582-7 8-7s8 2.582 8 7" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
+            </svg>
+          </div>
+          <p className="text-[15px] font-medium mb-1.5" style={{ color: '#f0f0f0' }}>
+            No accounts connected
+          </p>
+          <p className="text-[13px] mb-4" style={{ color: '#4a4a4a' }}>
+            Click "Connect" above and paste your Upload-Post API key to auto-import your profiles
+          </p>
+          <button
+            onClick={() => setShowKeyInput(true)}
+            className="px-5 py-2.5 rounded-[10px] text-sm font-semibold transition-all duration-200"
+            style={{
+              background: 'linear-gradient(135deg, rgba(167,139,250,0.15), rgba(96,165,250,0.08))',
+              color: '#a78bfa',
+              border: '1px solid rgba(167,139,250,0.2)',
+            }}
+          >
+            Connect Upload-Post ↗
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 stagger-children">
+          {accounts.map((account) => (
+            <div
+              key={account.id}
+              className="glass-card gradient-border rounded-[14px] p-5 group"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
                   <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold font-display text-white flex-shrink-0"
+                    className="w-11 h-11 rounded-[10px] flex items-center justify-center text-sm font-bold font-display text-white flex-shrink-0"
                     style={{ backgroundColor: account.color, boxShadow: `0 4px 14px ${account.color}30` }}
                   >
                     {account.name.slice(0, 2).toUpperCase()}
                   </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-white text-sm">{account.name}</span>
-                      <span className="text-[11px] text-[#555] font-mono">@{account.username}</span>
+                  <div>
+                    <div className="font-medium text-sm" style={{ color: '#f0f0f0' }}>
+                      {account.name}
                     </div>
-                    <div className="flex flex-wrap gap-1">
-                      {(account.platforms as string[]).map((p) => (
-                        <PlatformBadge key={p} platform={p} size="sm" />
-                      ))}
+                    <div className="text-[11px] font-mono" style={{ color: '#555' }}>
+                      @{account.username}
                     </div>
                   </div>
-
-                  <button
-                    onClick={() => handleDelete(account.id)}
-                    className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-[#555] hover:text-red-400 hover:bg-red-500/10 transition-all"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <path d="M2 3.5h10M5 3.5V2.5a1 1 0 011-1h2a1 1 0 011 1v1M5.5 6v5M8.5 6v5M3.5 3.5l.5 8.5h6l.5-8.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
                 </div>
-              ))}
+
+                <button
+                  onClick={() => handleDelete(account.id)}
+                  className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                  style={{ color: '#555' }}
+                  title="Remove account"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path
+                      d="M2 3.5h10M5 3.5V2.5a1 1 0 011-1h2a1 1 0 011 1v1M5.5 6v5M8.5 6v5M3.5 3.5l.5 8.5h6l.5-8.5"
+                      stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Connected platforms */}
+              <div className="text-[10px] uppercase tracking-widest font-medium mb-2" style={{ color: '#3a3a3a' }}>
+                Connected Platforms
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {(account.platforms as string[]).length > 0 ? (
+                  (account.platforms as string[]).map((p) => (
+                    <PlatformBadge key={p} platform={p} size="sm" />
+                  ))
+                ) : (
+                  <span className="text-[11px]" style={{ color: '#4a4a4a' }}>
+                    No platforms connected on Upload-Post
+                  </span>
+                )}
+              </div>
             </div>
-          )}
+          ))}
         </div>
-      </div>
+      )}
+
+      {/* Info footer */}
+      {accounts.length > 0 && (
+        <div className="glass-card rounded-[10px] px-4 py-3 mt-6 flex items-center gap-3 text-[11px]" style={{ color: '#4a4a4a' }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="flex-shrink-0">
+            <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.2" />
+            <path d="M7 4v1M7 6.5v4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+          </svg>
+          To add or remove platform connections, manage them at{' '}
+          <a
+            href="https://app.upload-post.com/manage-users"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: '#a78bfa' }}
+          >
+            upload-post.com ↗
+          </a>
+          , then click "Re-sync" to update here.
+        </div>
+      )}
     </div>
   );
 }
